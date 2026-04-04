@@ -143,6 +143,29 @@ class WPAPPT_Model_Booking {
 	}
 
 	/**
+	 * Return all non-cancelled bookings for a specific date.
+	 *
+	 * Used by the availability service to load the day's obstacles in one query
+	 * rather than hitting the DB once per candidate slot.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function find_by_date( string $date ): array {
+		$rows = $this->db->get_results(
+			$this->db->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT start_time, end_time FROM {$this->table}
+				  WHERE appointment_date = %s
+				    AND status != 'cancelled'",
+				$date
+			),
+			ARRAY_A
+		);
+
+		return $rows ?: [];
+	}
+
+	/**
 	 * Count bookings that overlap a given date + time range.
 	 *
 	 * Used by the availability service to determine whether a slot is taken.

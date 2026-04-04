@@ -1,0 +1,132 @@
+/* WP Appointments — Admin Styles */
+
+/* -------------------------------------------------------------------------- */
+/* Status badges                                                               */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-badge {
+	display: inline-block;
+	padding: 2px 10px;
+	border-radius: 12px;
+	font-size: 12px;
+	font-weight: 600;
+	line-height: 1.6;
+	text-transform: capitalize;
+	vertical-align: middle;
+}
+
+.wpappt-badge--pending {
+	background: #fff3cd;
+	color: #856404;
+	border: 1px solid #ffc107;
+}
+
+.wpappt-badge--confirmed {
+	background: #d1e7dd;
+	color: #0f5132;
+	border: 1px solid #198754;
+}
+
+.wpappt-badge--cancelled {
+	background: #f8d7da;
+	color: #842029;
+	border: 1px solid #dc3545;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Page heading badge (booking detail)                                         */
+/* -------------------------------------------------------------------------- */
+
+.wrap h1 .wpappt-badge {
+	margin-left: 12px;
+	font-size: 14px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Two-column layout (services page)                                           */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-two-col {
+	display: grid;
+	grid-template-columns: 1fr 380px;
+	gap: 32px;
+	align-items: start;
+	margin-top: 16px;
+}
+
+@media (max-width: 900px) {
+	.wpappt-two-col {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/* Booking detail grid                                                         */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-detail-grid {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 24px;
+	margin-top: 16px;
+}
+
+.wpappt-detail-section {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 16px 20px;
+}
+
+.wpappt-detail-section h2 {
+	font-size: 14px;
+	font-weight: 600;
+	margin: 0 0 12px;
+	padding-bottom: 8px;
+	border-bottom: 1px solid #f0f0f1;
+}
+
+.wpappt-detail-section .form-table th,
+.wpappt-detail-section .form-table td {
+	padding: 6px 0;
+}
+
+@media (max-width: 900px) {
+	.wpappt-detail-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/* Danger links / buttons                                                      */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-btn-danger,
+.wpappt-link-danger {
+	color: #b32d2e !important;
+}
+
+.wpappt-btn-danger:hover,
+.wpappt-link-danger:hover {
+	color: #8a1a1b !important;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Availability table                                                          */
+/* -------------------------------------------------------------------------- */
+
+#wpappt-availability-table .wpappt-avail-row--disabled td {
+	opacity: 0.45;
+}
+
+.wpappt-time-input {
+	width: 130px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Character counter                                                           */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-char-count {
+	margin-top: 4px;
+}

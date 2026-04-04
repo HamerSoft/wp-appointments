@@ -31,7 +31,8 @@ class WPAPPT_Plugin {
 	private function load_subsystems(): void {
 		// Admin panel — only in the WordPress back-end.
 		if ( is_admin() ) {
-			// Step 3: $admin = new WPAPPT_Admin(); $admin->init();
+			( new WPAPPT_Admin() )->init();
+			( new WPAPPT_Controller_Admin_Ajax() )->init();
 		}
 
 		// REST API routes — registered on rest_api_init.
