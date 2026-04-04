@@ -35,8 +35,8 @@ class WPAPPT_Plugin {
 			( new WPAPPT_Controller_Admin_Ajax() )->init();
 		}
 
-		// REST API routes — registered on rest_api_init.
-		// Step 5: add_action( 'rest_api_init', [ new WPAPPT_Rest_Api(), 'register_routes' ] );
+		// REST API routes.
+		add_action( 'rest_api_init', [ new WPAPPT_Rest_Api(), 'register_routes' ] );
 
 		// Divi module + shortcode — Step 9.
 	}

@@ -38,7 +38,65 @@ define( 'WPAPPT_PLUGIN_FILE', WPAPPT_PLUGIN_DIR . 'wp-appointments.php' );
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
 // ---------------------------------------------------------------------------
+// WordPress constants
+// ---------------------------------------------------------------------------
+
+if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
+	define( 'HOUR_IN_SECONDS', 3600 );
+}
+
+// ---------------------------------------------------------------------------
 // WordPress class stubs
+// ---------------------------------------------------------------------------
+
+if ( ! class_exists( 'WP_Error' ) ) {
+	class WP_Error {
+		public string $code    = '';
+		public string $message = '';
+		public array  $data    = [];
+
+		public function __construct( string $code = '', string $message = '', array $data = [] ) {
+			$this->code    = $code;
+			$this->message = $message;
+			$this->data    = $data;
+		}
+
+		public function get_error_code(): string    { return $this->code; }
+		public function get_error_message(): string { return $this->message; }
+		public function get_error_data(): array     { return $this->data; }
+	}
+}
+
+if ( ! class_exists( 'WP_REST_Response' ) ) {
+	class WP_REST_Response {
+		public mixed $data   = null;
+		public int   $status = 200;
+
+		public function __construct( mixed $data = null, int $status = 200 ) {
+			$this->data   = $data;
+			$this->status = $status;
+		}
+
+		public function get_status(): int  { return $this->status; }
+		public function get_data(): mixed  { return $this->data; }
+	}
+}
+
+if ( ! class_exists( 'WP_REST_Request' ) ) {
+	class WP_REST_Request {
+		private array $params;
+
+		public function __construct( array $params = [] ) {
+			$this->params = $params;
+		}
+
+		public function get_params(): array                { return $this->params; }
+		public function get_param( string $key ): mixed    { return $this->params[ $key ] ?? null; }
+	}
+}
+
+// ---------------------------------------------------------------------------
+// WordPress function stubs used outside Brain Monkey scope
 // ---------------------------------------------------------------------------
 
 /**
