@@ -193,9 +193,11 @@ class AutoloaderTest extends TestCase {
 			'Admin_Settings_Page'       => [ 'WPAPPT_Admin_Settings_Page'       ],
 			'Controller_Admin_Ajax'     => [ 'WPAPPT_Controller_Admin_Ajax'     ],
 			'Controller_Booking'        => [ 'WPAPPT_Controller_Booking'        ],
+			'Controller_Reschedule'     => [ 'WPAPPT_Controller_Reschedule'     ],
 			'Helper_Rate_Limiter'       => [ 'WPAPPT_Helper_Rate_Limiter'       ],
 			'Rest_Api'                  => [ 'WPAPPT_Rest_Api'                  ],
 			'Service_Availability'      => [ 'WPAPPT_Service_Availability'      ],
+			'Service_Token'             => [ 'WPAPPT_Service_Token'             ],
 		];
 	}
 }

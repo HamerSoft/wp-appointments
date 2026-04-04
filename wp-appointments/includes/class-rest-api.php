@@ -75,7 +75,36 @@ class WPAPPT_Rest_Api {
 			],
 		] );
 
-		// Reschedule routes are registered in Step 7 (WPAPPT_Controller_Reschedule).
+		// -----------------------------------------------------------------
+		// GET  /wpappt/v1/reschedule?token=
+		// POST /wpappt/v1/reschedule
+		// -----------------------------------------------------------------
+		$reschedule_controller = new WPAPPT_Controller_Reschedule();
+
+		register_rest_route( self::NAMESPACE, '/reschedule', [
+			[
+				'methods'             => \WP_REST_Server::READABLE,
+				'callback'            => [ $reschedule_controller, 'handle_get' ],
+				'permission_callback' => '__return_true',
+				'args'                => [
+					'token' => [
+						'required'          => true,
+						'type'              => 'string',
+						'sanitize_callback' => 'sanitize_text_field',
+					],
+				],
+			],
+			[
+				'methods'             => \WP_REST_Server::CREATABLE,
+				'callback'            => [ $reschedule_controller, 'handle_post' ],
+				'permission_callback' => '__return_true',
+				'args'                => [
+					'token'            => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
+					'appointment_date' => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
+					'start_time'       => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
+				],
+			],
+		] );
 	}
 
 	// =========================================================================

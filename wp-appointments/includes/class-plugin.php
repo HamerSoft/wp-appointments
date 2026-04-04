@@ -35,6 +35,13 @@ class WPAPPT_Plugin {
 			( new WPAPPT_Controller_Admin_Ajax() )->init();
 		}
 
+		// Token service (priority 5) — must init before email service so it
+		// fires wpappt_booking_confirmed before the email listener (priority 10).
+		( new WPAPPT_Service_Token() )->init();
+
+		// Email service.
+		( new WPAPPT_Service_Email() )->init();
+
 		// REST API routes.
 		add_action( 'rest_api_init', [ new WPAPPT_Rest_Api(), 'register_routes' ] );
 
