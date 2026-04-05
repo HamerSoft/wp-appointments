@@ -1,5 +1,54 @@
 # Embedding the Booking Widget
 
+This guide walks through installing the plugin on your WordPress site and then embedding the booking widget on a page.
+
+---
+
+## Step 1 — Install the plugin
+
+1. Download or clone this repository to your computer.
+2. Copy the **inner** `wp-appointments/` folder (the one containing `wp-appointments.php`) into your WordPress plugins directory:
+   ```
+   wp-content/plugins/wp-appointments/
+   ```
+3. Log in to wp-admin and go to **Plugins**.
+4. Find **WP Appointments** in the list and click **Activate**. The plugin creates its database tables automatically on activation.
+
+---
+
+## Step 2 — Configure the plugin
+
+Before you can accept bookings, three things need to be set up.
+
+### Settings
+
+Go to **Appointments → Settings** and fill in:
+
+- **Notification Email** — the email address that receives new booking requests (defaults to your WordPress admin email).
+- **Sender Name** — the name that appears in the `From:` field of all emails the plugin sends (defaults to your site name).
+- **Booking Page** — select the page where you will embed the widget. This is used to build the reschedule link included in confirmation emails. **Set this before confirming any bookings.**
+
+### Services
+
+Go to **Appointments → Services** and add at least one service. Each service needs a name, a duration in minutes, and a price.
+
+### Availability
+
+Go to **Appointments → Availability** and configure your weekly schedule — the days and hours you are available for appointments. You can add blocked slots here too for one-off dates you are unavailable.
+
+---
+
+## Step 3 — Create a booking page
+
+1. In wp-admin go to **Pages → Add New**.
+2. Give the page a title such as "Book a Session".
+3. Leave the page open — you will add the widget to it in the next step.
+4. Once the widget is added, publish the page and link to it from your navigation menu.
+
+---
+
+## Step 4 — Embed the widget
+
 The booking widget can be added to any page on your site in two ways: via the **Divi Visual Builder** (recommended) or via a **shortcode** as a fallback.
 
 ---
