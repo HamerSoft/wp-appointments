@@ -55,7 +55,11 @@
 	 * API helpers
 	 * ========================================================================= */
 	function apiFetch( path, options ) {
-		var url      = cfg.apiUrl + path;
+		// When pretty permalinks are off, apiUrl contains "?rest_route=…" already.
+		// In that case the first "?" in path must become "&".
+		var url = cfg.apiUrl.indexOf( '?' ) !== -1
+			? cfg.apiUrl + path.replace( '?', '&' )
+			: cfg.apiUrl + path;
 		var headers  = { 'Content-Type': 'application/json', 'X-WP-Nonce': cfg.nonce };
 		var settings = Object.assign( { headers: headers }, options || {} );
 
@@ -446,7 +450,9 @@
 		setFieldError( 'wpappt-email', 'err-email',
 			! email ? 'Please enter your email address.' :
 			! isValidEmail( email ) ? 'Please enter a valid email address.' : '' );
-		setFieldError( 'wpappt-phone', 'err-phone', phone ? '' : 'Please enter your phone number.' );
+		setFieldError( 'wpappt-phone', 'err-phone',
+		! phone                ? 'Please enter your phone number.' :
+		! isValidPhone( phone ) ? 'Please enter a valid phone number (digits, spaces, +, - allowed).' : '' );
 
 		return valid;
 	}
@@ -574,6 +580,14 @@
 
 	function isValidEmail( email ) {
 		return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test( email );
+	}
+
+	function isValidPhone( phone ) {
+		// Allow digits, spaces, dashes, dots, parentheses, leading +.
+		// Must contain at least 7 digits total.
+		if ( ! /^[+]?[\d\s\-().]+$/.test( phone ) ) return false;
+		var digits = phone.replace( /\D/g, '' );
+		return digits.length >= 7 && digits.length <= 15;
 	}
 
 	function formatDate( d ) {

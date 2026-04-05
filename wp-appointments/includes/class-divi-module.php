@@ -17,7 +17,7 @@ class WPAPPT_Divi_Module extends ET_Builder_Module {
 
 	public $name       = 'Booking Widget';
 	public $slug       = 'wpappt_booking';
-	public $vb_support = 'on';
+	public $vb_support = 'off';
 
 	/**
 	 * Called automatically by the ET_Builder_Module constructor.
@@ -26,7 +26,7 @@ class WPAPPT_Divi_Module extends ET_Builder_Module {
 	public function init(): void {
 		$this->name             = esc_html__( 'Booking Widget', 'wp-appointments' );
 		$this->slug             = 'wpappt_booking';
-		$this->vb_support       = 'on';
+		$this->vb_support       = 'off';
 		$this->main_css_element = '#wpappt-booking-widget';
 
 		$this->settings_modal_toggles = [
@@ -59,6 +59,9 @@ class WPAPPT_Divi_Module extends ET_Builder_Module {
 	 * @return string HTML output.
 	 */
 	public function render( $attrs, $content, $render_slug ): string {
+		if ( function_exists( 'et_core_is_fb_enabled' ) && et_core_is_fb_enabled() ) {
+			return '<div style="padding:2em;text-align:center;border:2px dashed #ccc;color:#888;">Booking Widget — preview on the frontend</div>';
+		}
 		return '<div id="wpappt-booking-widget"></div>';
 	}
 }

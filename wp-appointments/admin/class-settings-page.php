@@ -13,7 +13,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WPAPPT_Admin_Settings_Page {
 
-	const SECTION = 'wpappt_general';
+	const SECTION      = 'wpappt_general';
+	const SECTION_SMTP = 'wpappt_smtp';
 
 	public function __construct() {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
@@ -50,10 +51,23 @@ class WPAPPT_Admin_Settings_Page {
 			]
 		);
 
+		register_setting( 'wpappt_options', 'wpappt_smtp_host',       [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field', 'default' => '' ] );
+		register_setting( 'wpappt_options', 'wpappt_smtp_port',       [ 'type' => 'integer', 'sanitize_callback' => 'absint',              'default' => 587 ] );
+		register_setting( 'wpappt_options', 'wpappt_smtp_encryption', [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field', 'default' => 'tls' ] );
+		register_setting( 'wpappt_options', 'wpappt_smtp_username',   [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field', 'default' => '' ] );
+		register_setting( 'wpappt_options', 'wpappt_smtp_password',   [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field', 'default' => '' ] );
+
 		add_settings_section(
 			self::SECTION,
 			__( 'General Settings', 'wp-appointments' ),
 			'__return_false',
+			'wpappt_options'
+		);
+
+		add_settings_section(
+			self::SECTION_SMTP,
+			__( 'Outgoing Email (SMTP)', 'wp-appointments' ),
+			[ $this, 'section_smtp_description' ],
 			'wpappt_options'
 		);
 
@@ -80,6 +94,12 @@ class WPAPPT_Admin_Settings_Page {
 			'wpappt_options',
 			self::SECTION
 		);
+
+		add_settings_field( 'wpappt_smtp_host',       __( 'SMTP Host',       'wp-appointments' ), [ $this, 'field_smtp_host'       ], 'wpappt_options', self::SECTION_SMTP );
+		add_settings_field( 'wpappt_smtp_port',       __( 'SMTP Port',       'wp-appointments' ), [ $this, 'field_smtp_port'       ], 'wpappt_options', self::SECTION_SMTP );
+		add_settings_field( 'wpappt_smtp_encryption', __( 'Encryption',      'wp-appointments' ), [ $this, 'field_smtp_encryption' ], 'wpappt_options', self::SECTION_SMTP );
+		add_settings_field( 'wpappt_smtp_username',   __( 'SMTP Username',   'wp-appointments' ), [ $this, 'field_smtp_username'   ], 'wpappt_options', self::SECTION_SMTP );
+		add_settings_field( 'wpappt_smtp_password',   __( 'SMTP Password',   'wp-appointments' ), [ $this, 'field_smtp_password'   ], 'wpappt_options', self::SECTION_SMTP );
 	}
 
 	// -------------------------------------------------------------------------
@@ -115,6 +135,56 @@ class WPAPPT_Admin_Settings_Page {
 			'option_none_value' => 0,
 		] );
 		echo '<p class="description">' . esc_html__( 'The page where the booking widget is embedded. Used to build reschedule links.', 'wp-appointments' ) . '</p>';
+	}
+
+	public function section_smtp_description(): void {
+		echo '<p class="description">' . esc_html__( 'Leave blank to use the server default. Fill in to send via your own email provider (Gmail, Mailgun, etc.).', 'wp-appointments' ) . '</p>';
+	}
+
+	public function field_smtp_host(): void {
+		$value = get_option( 'wpappt_smtp_host', '' );
+		printf(
+			'<input type="text" name="wpappt_smtp_host" value="%s" class="regular-text" placeholder="e.g. smtp.gmail.com" />',
+			esc_attr( $value )
+		);
+	}
+
+	public function field_smtp_port(): void {
+		$value = get_option( 'wpappt_smtp_port', 587 );
+		printf(
+			'<input type="number" name="wpappt_smtp_port" value="%d" class="small-text" />
+			<p class="description">%s</p>',
+			(int) $value,
+			esc_html__( '587 for TLS (recommended), 465 for SSL, 25 for none.', 'wp-appointments' )
+		);
+	}
+
+	public function field_smtp_encryption(): void {
+		$value = get_option( 'wpappt_smtp_encryption', 'tls' );
+		$options = [ 'tls' => 'TLS (STARTTLS)', 'ssl' => 'SSL', '' => 'None' ];
+		echo '<select name="wpappt_smtp_encryption">';
+		foreach ( $options as $key => $label ) {
+			printf( '<option value="%s"%s>%s</option>', esc_attr( $key ), selected( $value, $key, false ), esc_html( $label ) );
+		}
+		echo '</select>';
+	}
+
+	public function field_smtp_username(): void {
+		$value = get_option( 'wpappt_smtp_username', '' );
+		printf(
+			'<input type="text" name="wpappt_smtp_username" value="%s" class="regular-text" autocomplete="off" />',
+			esc_attr( $value )
+		);
+	}
+
+	public function field_smtp_password(): void {
+		$value = get_option( 'wpappt_smtp_password', '' );
+		printf(
+			'<input type="password" name="wpappt_smtp_password" value="%s" class="regular-text" autocomplete="new-password" />
+			<p class="description">%s</p>',
+			esc_attr( $value ),
+			esc_html__( 'Stored in the database. For Gmail, use an App Password (not your account password).', 'wp-appointments' )
+		);
 	}
 
 	// -------------------------------------------------------------------------

@@ -12,11 +12,13 @@ class WPAPPT_Admin {
 	private WPAPPT_Model_Booking      $booking_model;
 	private WPAPPT_Model_Service      $service_model;
 	private WPAPPT_Model_Availability $availability_model;
+	private WPAPPT_Admin_Settings_Page $settings_page;
 
 	public function __construct() {
 		$this->booking_model      = new WPAPPT_Model_Booking();
 		$this->service_model      = new WPAPPT_Model_Service();
 		$this->availability_model = new WPAPPT_Model_Availability();
+		$this->settings_page      = new WPAPPT_Admin_Settings_Page();
 	}
 
 	public function init(): void {
@@ -215,7 +217,6 @@ class WPAPPT_Admin {
 			wp_die( esc_html__( 'You do not have permission to view this page.', 'wp-appointments' ) );
 		}
 
-		$settings_page = new WPAPPT_Admin_Settings_Page();
-		$settings_page->render();
+		$this->settings_page->render();
 	}
 }

@@ -21,6 +21,45 @@ class WPAPPT_Plugin {
 	// Frontend assets
 	// -------------------------------------------------------------------------
 
+	public function configure_smtp( $phpmailer ): void {
+		// Resolution order: env var → wp-config.php constant → settings page DB option.
+		$host     = $this->smtp_setting( 'WPAPPT_SMTP_HOST',       'wpappt_smtp_host',       '' );
+		$port     = (int) $this->smtp_setting( 'WPAPPT_SMTP_PORT', 'wpappt_smtp_port',       '587' );
+		$enc      = $this->smtp_setting( 'WPAPPT_SMTP_ENCRYPTION', 'wpappt_smtp_encryption', 'tls' );
+		$username = $this->smtp_setting( 'WPAPPT_SMTP_USERNAME',   'wpappt_smtp_username',   '' );
+		$password = $this->smtp_setting( 'WPAPPT_SMTP_PASSWORD',   'wpappt_smtp_password',   '' );
+
+		if ( '' === $host ) {
+			return; // No SMTP configured — leave WordPress default alone.
+		}
+
+		$phpmailer->isSMTP();
+		$phpmailer->Host       = $host;
+		$phpmailer->Port       = $port;
+		$phpmailer->SMTPSecure = $enc;
+
+		if ( '' !== $username && '' !== $password ) {
+			$phpmailer->SMTPAuth = true;
+			$phpmailer->Username = $username;
+			$phpmailer->Password = $password;
+		}
+	}
+
+	/**
+	 * Resolve a single SMTP setting.
+	 * Priority: environment variable → wp-config.php constant → database option.
+	 */
+	private function smtp_setting( string $constant, string $option, string $default ): string {
+		$env = getenv( $constant );
+		if ( false !== $env && '' !== $env ) {
+			return $env;
+		}
+		if ( defined( $constant ) ) {
+			return (string) constant( $constant );
+		}
+		return (string) get_option( $option, $default );
+	}
+
 	public function enqueue_widget_assets(): void {
 		wp_enqueue_style(
 			'wpappt-widget',
@@ -70,6 +109,9 @@ class WPAPPT_Plugin {
 
 		// REST API routes.
 		add_action( 'rest_api_init', [ new WPAPPT_Rest_Api(), 'register_routes' ] );
+
+		// SMTP configuration.
+		add_action( 'phpmailer_init', [ $this, 'configure_smtp' ] );
 
 		// Frontend booking widget assets.
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_widget_assets' ] );

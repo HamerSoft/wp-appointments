@@ -1,0 +1,29 @@
+# Divi theme zip
+*.zip
+
+# Docker
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+.dockerignore
+bin/
+
+# WordPress core (if checked out locally)
+wp-admin/
+wp-includes/
+wp-content/
+!wp-content/plugins/wp-appointments/
+
+# Environment & secrets
+.env
+.env.*
+
+# Dependencies
+vendor/
+node_modules/
+
+# IDE & OS
+.idea/
+.vscode/
+*.DS_Store
+Thumbs.db

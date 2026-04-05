@@ -130,15 +130,32 @@ class WPAPPT_Controller_Booking {
 	 */
 	private function validate( array $data ): ?\WP_Error {
 		// Required text fields.
-		foreach ( [ 'customer_name', 'customer_phone' ] as $field ) {
-			if ( '' === $data[ $field ] ) {
-				return new \WP_Error(
-					'missing_field',
-					/* translators: %s: field name */
-					sprintf( __( '%s is required.', 'wp-appointments' ), ucwords( str_replace( '_', ' ', $field ) ) ),
-					[ 'status' => 422 ]
-				);
-			}
+		if ( '' === $data['customer_name'] ) {
+			return new \WP_Error(
+				'missing_field',
+				__( 'Customer name is required.', 'wp-appointments' ),
+				[ 'status' => 422 ]
+			);
+		}
+
+		// Phone: required and must contain only digits, spaces, +, -, dots, parens; 7–15 digits.
+		if ( '' === $data['customer_phone'] ) {
+			return new \WP_Error(
+				'missing_field',
+				__( 'Phone number is required.', 'wp-appointments' ),
+				[ 'status' => 422 ]
+			);
+		}
+		$digits_only = preg_replace( '/\D/', '', $data['customer_phone'] );
+		if ( ! preg_match( '/^[+]?[\d\s\-().]+$/', $data['customer_phone'] )
+			|| strlen( $digits_only ) < 7
+			|| strlen( $digits_only ) > 15
+		) {
+			return new \WP_Error(
+				'invalid_phone',
+				__( 'Please provide a valid phone number.', 'wp-appointments' ),
+				[ 'status' => 422 ]
+			);
 		}
 
 		// Email.
