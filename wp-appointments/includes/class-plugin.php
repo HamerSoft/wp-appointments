@@ -74,6 +74,16 @@ class WPAPPT_Plugin {
 		// Frontend booking widget assets.
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_widget_assets' ] );
 
-		// Divi module + shortcode — Step 9.
+		// Shortcode fallback: [wpappt_booking].
+		add_shortcode( 'wpappt_booking', static function (): string {
+			return '<div id="wpappt-booking-widget"></div>';
+		} );
+
+		// Divi module — registered after Divi's builder classes are loaded.
+		// The action never fires when Divi is inactive, so this is safe on any site.
+		add_action( 'et_builder_ready', static function (): void {
+			require_once WPAPPT_PLUGIN_DIR . 'includes/class-divi-module.php';
+			new WPAPPT_Divi_Module();
+		} );
 	}
 }
