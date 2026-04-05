@@ -1,0 +1,538 @@
+/* WP Appointments — Booking Widget */
+
+/* -------------------------------------------------------------------------- */
+/* Widget shell                                                                */
+/* -------------------------------------------------------------------------- */
+
+#wpappt-booking-widget {
+	--wpappt-primary:      #2c6e49;
+	--wpappt-primary-dark: #1e4d34;
+	--wpappt-primary-bg:   #edf5f0;
+	--wpappt-border:       #d1d5db;
+	--wpappt-radius:       6px;
+	--wpappt-text:         #1a1a1a;
+	--wpappt-muted:        #6b7280;
+	font-family: inherit;
+	color: var(--wpappt-text);
+}
+
+.wpappt-widget {
+	max-width: 640px;
+	margin: 0 auto;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Progress bar                                                                */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-progress {
+	display: flex;
+	list-style: none;
+	margin: 0 0 32px;
+	padding: 0;
+	gap: 0;
+	counter-reset: none;
+}
+
+.wpappt-progress__item {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	position: relative;
+	font-size: 12px;
+	color: var(--wpappt-muted);
+}
+
+/* connector line between steps */
+.wpappt-progress__item + .wpappt-progress__item::before {
+	content: '';
+	position: absolute;
+	top: 14px;
+	right: 50%;
+	left: -50%;
+	height: 2px;
+	background: var(--wpappt-border);
+	z-index: 0;
+}
+
+.wpappt-progress__item.is-done + .wpappt-progress__item::before,
+.wpappt-progress__item.is-active + .wpappt-progress__item::before {
+	background: var(--wpappt-primary);
+}
+
+.wpappt-progress__num {
+	width: 28px;
+	height: 28px;
+	border-radius: 50%;
+	background: #fff;
+	border: 2px solid var(--wpappt-border);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	font-size: 13px;
+	font-weight: 600;
+	position: relative;
+	z-index: 1;
+}
+
+.wpappt-progress__item.is-active .wpappt-progress__num {
+	background: var(--wpappt-primary);
+	border-color: var(--wpappt-primary);
+	color: #fff;
+}
+
+.wpappt-progress__item.is-done .wpappt-progress__num {
+	background: var(--wpappt-primary-bg);
+	border-color: var(--wpappt-primary);
+	color: var(--wpappt-primary);
+	/* checkmark replaces number for completed steps */
+	font-size: 0;
+}
+
+.wpappt-progress__item.is-done .wpappt-progress__num::after {
+	content: '\2713';
+	font-size: 13px;
+}
+
+.wpappt-progress__label {
+	font-size: 11px;
+	text-align: center;
+	white-space: nowrap;
+}
+
+.wpappt-progress__item.is-active .wpappt-progress__label {
+	color: var(--wpappt-primary);
+	font-weight: 600;
+}
+
+@media (max-width: 480px) {
+	.wpappt-progress__label {
+		display: none;
+	}
+}
+
+/* -------------------------------------------------------------------------- */
+/* Step heading                                                                */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-step-title {
+	font-size: 20px;
+	font-weight: 700;
+	margin: 0 0 8px;
+}
+
+.wpappt-step-sub {
+	color: var(--wpappt-muted);
+	margin: 0 0 20px;
+	font-size: 14px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Service cards                                                               */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-service-list {
+	list-style: none;
+	margin: 0 0 24px;
+	padding: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.wpappt-service-card {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 16px 20px;
+	border: 2px solid var(--wpappt-border);
+	border-radius: var(--wpappt-radius);
+	cursor: pointer;
+	transition: border-color 0.15s, background 0.15s;
+	gap: 16px;
+}
+
+.wpappt-service-card:hover {
+	border-color: var(--wpappt-primary);
+	background: var(--wpappt-primary-bg);
+}
+
+.wpappt-service-card.is-selected {
+	border-color: var(--wpappt-primary);
+	background: var(--wpappt-primary-bg);
+}
+
+.wpappt-service-name {
+	font-weight: 600;
+}
+
+.wpappt-service-meta {
+	font-size: 13px;
+	color: var(--wpappt-muted);
+	white-space: nowrap;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Calendar                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-cal {
+	margin-bottom: 24px;
+	border: 1px solid var(--wpappt-border);
+	border-radius: var(--wpappt-radius);
+	overflow: hidden;
+}
+
+.wpappt-cal__header {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 16px;
+	background: var(--wpappt-primary-bg);
+	border-bottom: 1px solid var(--wpappt-border);
+}
+
+.wpappt-cal__title {
+	font-weight: 700;
+	font-size: 15px;
+}
+
+.wpappt-cal__nav {
+	background: none;
+	border: none;
+	cursor: pointer;
+	font-size: 22px;
+	line-height: 1;
+	color: var(--wpappt-primary);
+	padding: 2px 8px;
+	border-radius: 4px;
+	transition: background 0.12s;
+}
+
+.wpappt-cal__nav:hover:not(:disabled) {
+	background: rgba(0, 0, 0, 0.07);
+}
+
+.wpappt-cal__nav:disabled {
+	opacity: 0.3;
+	cursor: not-allowed;
+}
+
+.wpappt-cal__grid {
+	display: grid;
+	grid-template-columns: repeat(7, 1fr);
+}
+
+.wpappt-cal__grid--head {
+	background: #f9fafb;
+	border-bottom: 1px solid var(--wpappt-border);
+}
+
+.wpappt-cal__day-name {
+	text-align: center;
+	padding: 8px 4px;
+	font-size: 11px;
+	font-weight: 600;
+	color: var(--wpappt-muted);
+	text-transform: uppercase;
+	letter-spacing: 0.04em;
+}
+
+.wpappt-cal__cell {
+	text-align: center;
+	padding: 10px 4px;
+	font-size: 14px;
+	line-height: 1;
+}
+
+.wpappt-cal__cell.is-available {
+	cursor: pointer;
+	border-radius: 4px;
+	transition: background 0.12s;
+}
+
+.wpappt-cal__cell.is-available:hover {
+	background: var(--wpappt-primary-bg);
+	color: var(--wpappt-primary);
+	font-weight: 600;
+}
+
+.wpappt-cal__cell.is-selected {
+	background: var(--wpappt-primary) !important;
+	color: #fff !important;
+	font-weight: 700;
+	border-radius: 4px;
+}
+
+.wpappt-cal__cell.is-past {
+	color: #c0c4cc;
+	cursor: default;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Time slots                                                                  */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-slot-list {
+	list-style: none;
+	margin: 0 0 24px;
+	padding: 0;
+	display: grid;
+	grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+	gap: 10px;
+}
+
+.wpappt-slot {
+	padding: 12px 10px;
+	text-align: center;
+	border: 2px solid var(--wpappt-border);
+	border-radius: var(--wpappt-radius);
+	cursor: pointer;
+	font-size: 14px;
+	font-weight: 500;
+	transition: border-color 0.15s, background 0.15s;
+}
+
+.wpappt-slot:hover {
+	border-color: var(--wpappt-primary);
+	background: var(--wpappt-primary-bg);
+}
+
+.wpappt-slot.is-selected {
+	border-color: var(--wpappt-primary);
+	background: var(--wpappt-primary);
+	color: #fff;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Form fields                                                                 */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-field {
+	margin-bottom: 18px;
+}
+
+.wpappt-field label {
+	display: block;
+	font-size: 14px;
+	font-weight: 600;
+	margin-bottom: 5px;
+}
+
+.wpappt-required {
+	color: #c0392b;
+}
+
+.wpappt-optional {
+	font-weight: 400;
+	color: var(--wpappt-muted);
+	font-size: 12px;
+}
+
+.wpappt-field input[type="text"],
+.wpappt-field input[type="email"],
+.wpappt-field input[type="tel"],
+.wpappt-field textarea {
+	width: 100%;
+	box-sizing: border-box;
+	padding: 9px 12px;
+	border: 1px solid var(--wpappt-border);
+	border-radius: var(--wpappt-radius);
+	font-size: 15px;
+	font-family: inherit;
+	color: var(--wpappt-text);
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.wpappt-field input:focus,
+.wpappt-field textarea:focus {
+	outline: none;
+	border-color: var(--wpappt-primary);
+	box-shadow: 0 0 0 3px rgba(44, 110, 73, 0.15);
+}
+
+.wpappt-field input.has-error,
+.wpappt-field textarea.has-error {
+	border-color: #dc2626;
+}
+
+.wpappt-field-error {
+	display: block;
+	margin-top: 4px;
+	font-size: 13px;
+	color: #dc2626;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Summary (step 5)                                                            */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-summary {
+	border: 1px solid var(--wpappt-border);
+	border-radius: var(--wpappt-radius);
+	overflow: hidden;
+	margin: 0 0 20px;
+}
+
+.wpappt-summary__row {
+	display: flex;
+	gap: 12px;
+	padding: 11px 16px;
+	border-bottom: 1px solid var(--wpappt-border);
+}
+
+.wpappt-summary__row:last-child {
+	border-bottom: none;
+}
+
+.wpappt-summary__row dt {
+	width: 110px;
+	flex-shrink: 0;
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--wpappt-muted);
+}
+
+.wpappt-summary__row dd {
+	margin: 0;
+	font-size: 14px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Notices                                                                     */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-notice {
+	padding: 12px 16px;
+	border-radius: var(--wpappt-radius);
+	font-size: 14px;
+	margin: 0 0 16px;
+	background: #f9fafb;
+	border: 1px solid var(--wpappt-border);
+}
+
+.wpappt-notice--info {
+	background: #eff6ff;
+	border-color: #93c5fd;
+	color: #1e3a5f;
+}
+
+.wpappt-notice--error {
+	background: #fef2f2;
+	border-color: #fca5a5;
+	color: #991b1b;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Navigation buttons                                                          */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-nav {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	margin-top: 24px;
+	gap: 12px;
+}
+
+.wpappt-nav--right {
+	justify-content: flex-end;
+}
+
+.wpappt-btn {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 22px;
+	border-radius: var(--wpappt-radius);
+	font-size: 15px;
+	font-weight: 600;
+	font-family: inherit;
+	cursor: pointer;
+	border: 2px solid transparent;
+	transition: background 0.15s, border-color 0.15s, color 0.15s;
+	line-height: 1.3;
+}
+
+.wpappt-btn--primary {
+	background: var(--wpappt-primary);
+	color: #fff;
+	border-color: var(--wpappt-primary);
+}
+
+.wpappt-btn--primary:hover:not(:disabled) {
+	background: var(--wpappt-primary-dark);
+	border-color: var(--wpappt-primary-dark);
+}
+
+.wpappt-btn--primary:disabled {
+	opacity: 0.45;
+	cursor: not-allowed;
+}
+
+.wpappt-btn--ghost {
+	background: transparent;
+	color: var(--wpappt-muted);
+	border-color: var(--wpappt-border);
+}
+
+.wpappt-btn--ghost:hover {
+	background: #f3f4f6;
+	color: var(--wpappt-text);
+}
+
+/* -------------------------------------------------------------------------- */
+/* Loading spinner                                                             */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-loading {
+	text-align: center;
+	padding: 40px 0;
+	color: var(--wpappt-muted);
+	font-size: 14px;
+}
+
+.wpappt-loading::before {
+	content: '';
+	display: block;
+	width: 32px;
+	height: 32px;
+	border: 3px solid var(--wpappt-border);
+	border-top-color: var(--wpappt-primary);
+	border-radius: 50%;
+	animation: wpappt-spin 0.7s linear infinite;
+	margin: 0 auto 12px;
+}
+
+@keyframes wpappt-spin {
+	to { transform: rotate(360deg); }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Success screen                                                              */
+/* -------------------------------------------------------------------------- */
+
+.wpappt-success {
+	text-align: center;
+	padding: 32px 16px;
+}
+
+.wpappt-success__icon {
+	width: 64px;
+	height: 64px;
+	border-radius: 50%;
+	background: var(--wpappt-primary);
+	color: #fff;
+	font-size: 30px;
+	line-height: 64px;
+	margin: 0 auto 20px;
+}
+
+.wpappt-success p {
+	font-size: 15px;
+	line-height: 1.6;
+	color: #374151;
+	margin: 0 0 12px;
+}

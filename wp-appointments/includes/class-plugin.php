@@ -17,6 +17,32 @@ class WPAPPT_Plugin {
 		$this->load_subsystems();
 	}
 
+	// -------------------------------------------------------------------------
+	// Frontend assets
+	// -------------------------------------------------------------------------
+
+	public function enqueue_widget_assets(): void {
+		wp_enqueue_style(
+			'wpappt-widget',
+			WPAPPT_PLUGIN_URL . 'assets/css/booking-widget.css',
+			[],
+			WPAPPT_VERSION
+		);
+
+		wp_enqueue_script(
+			'wpappt-widget',
+			WPAPPT_PLUGIN_URL . 'assets/js/booking-widget.js',
+			[],
+			WPAPPT_VERSION,
+			true  // load in footer
+		);
+
+		wp_localize_script( 'wpappt-widget', 'WPAppt', [
+			'apiUrl' => esc_url_raw( rest_url( 'wpappt/v1/' ) ),
+			'nonce'  => wp_create_nonce( 'wp_rest' ),
+		] );
+	}
+
 	public static function get_instance(): self {
 		if ( null === self::$instance ) {
 			self::$instance = new self();
@@ -44,6 +70,9 @@ class WPAPPT_Plugin {
 
 		// REST API routes.
 		add_action( 'rest_api_init', [ new WPAPPT_Rest_Api(), 'register_routes' ] );
+
+		// Frontend booking widget assets.
+		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_widget_assets' ] );
 
 		// Divi module + shortcode — Step 9.
 	}
