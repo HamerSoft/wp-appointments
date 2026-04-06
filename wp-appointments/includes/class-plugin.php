@@ -241,6 +241,9 @@ class WPAPPT_Plugin {
 		// Email service.
 		( new WPAPPT_Service_Email() )->init();
 
+		// Reminder cron handler.
+		( new WPAPPT_Service_Reminder() )->init();
+
 		// REST API routes.
 		add_action( 'rest_api_init', [ new WPAPPT_Rest_Api(), 'register_routes' ] );
 

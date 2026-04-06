@@ -13,8 +13,9 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WPAPPT_Admin_Settings_Page {
 
-	const SECTION      = 'wpappt_general';
-	const SECTION_SMTP = 'wpappt_smtp';
+	const SECTION           = 'wpappt_general';
+	const SECTION_SMTP      = 'wpappt_smtp';
+	const SECTION_REMINDERS = 'wpappt_reminders';
 
 	public function __construct() {
 		add_action( 'admin_init', [ $this, 'register_settings' ] );
@@ -51,6 +52,9 @@ class WPAPPT_Admin_Settings_Page {
 			]
 		);
 
+		register_setting( 'wpappt_options', 'wpappt_reminders_enabled', [ 'type' => 'integer', 'sanitize_callback' => 'absint',              'default' => 1  ] );
+		register_setting( 'wpappt_options', 'wpappt_reminder_days',    [ 'type' => 'integer', 'sanitize_callback' => 'absint',              'default' => 1  ] );
+
 		register_setting( 'wpappt_options', 'wpappt_smtp_host',       [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field', 'default' => '' ] );
 		register_setting( 'wpappt_options', 'wpappt_smtp_port',       [ 'type' => 'integer', 'sanitize_callback' => 'absint',              'default' => 587 ] );
 		register_setting( 'wpappt_options', 'wpappt_smtp_encryption', [ 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field', 'default' => 'tls' ] );
@@ -58,6 +62,13 @@ class WPAPPT_Admin_Settings_Page {
 		add_settings_section(
 			self::SECTION,
 			__( 'General Settings', 'wp-appointments' ),
+			'__return_false',
+			'wpappt_options'
+		);
+
+		add_settings_section(
+			self::SECTION_REMINDERS,
+			__( 'Appointment Reminders', 'wp-appointments' ),
 			'__return_false',
 			'wpappt_options'
 		);
@@ -92,6 +103,9 @@ class WPAPPT_Admin_Settings_Page {
 			'wpappt_options',
 			self::SECTION
 		);
+
+		add_settings_field( 'wpappt_reminders_enabled', __( 'Send reminders',    'wp-appointments' ), [ $this, 'field_reminders_enabled' ], 'wpappt_options', self::SECTION_REMINDERS );
+		add_settings_field( 'wpappt_reminder_days',    __( 'Days in advance',   'wp-appointments' ), [ $this, 'field_reminder_days'    ], 'wpappt_options', self::SECTION_REMINDERS );
 
 		add_settings_field( 'wpappt_smtp_host',       __( 'SMTP Host',  'wp-appointments' ), [ $this, 'field_smtp_host'       ], 'wpappt_options', self::SECTION_SMTP );
 		add_settings_field( 'wpappt_smtp_port',       __( 'SMTP Port',  'wp-appointments' ), [ $this, 'field_smtp_port'       ], 'wpappt_options', self::SECTION_SMTP );
@@ -131,6 +145,27 @@ class WPAPPT_Admin_Settings_Page {
 			'option_none_value' => 0,
 		] );
 		echo '<p class="description">' . esc_html__( 'The page where the booking widget is embedded. Used to build reschedule links.', 'wp-appointments' ) . '</p>';
+	}
+
+	public function field_reminders_enabled(): void {
+		$value = (int) get_option( 'wpappt_reminders_enabled', 1 );
+		printf(
+			'<label><input type="checkbox" name="wpappt_reminders_enabled" value="1"%s /> %s</label>
+			<p class="description">%s</p>',
+			checked( 1, $value, false ),
+			esc_html__( 'Enabled', 'wp-appointments' ),
+			esc_html__( 'Automatically email customers a reminder before their appointment.', 'wp-appointments' )
+		);
+	}
+
+	public function field_reminder_days(): void {
+		$value = (int) get_option( 'wpappt_reminder_days', 1 );
+		printf(
+			'<input type="number" name="wpappt_reminder_days" value="%d" min="1" max="14" class="small-text" />
+			<p class="description">%s</p>',
+			$value,
+			esc_html__( 'How many days before the appointment to send the reminder. Default: 1 (the day before).', 'wp-appointments' )
+		);
 	}
 
 	public function section_smtp_description(): void {

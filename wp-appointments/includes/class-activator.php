@@ -16,6 +16,7 @@ class WPAPPT_Activator {
 	public static function activate(): void {
 		self::create_tables();
 		self::set_default_options();
+		self::schedule_cron();
 
 		// Store the version so future activations can run targeted upgrades.
 		update_option( 'wpappt_version', WPAPPT_VERSION );
@@ -101,6 +102,7 @@ class WPAPPT_Activator {
   reschedule_token VARCHAR(64) NULL DEFAULT NULL,
   token_expires_at DATETIME NULL DEFAULT NULL,
   admin_notes TEXT NULL DEFAULT NULL,
+  reminder_sent_at DATETIME NULL DEFAULT NULL,
   created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME NULL DEFAULT NULL,
   PRIMARY KEY  (id),
@@ -135,15 +137,32 @@ class WPAPPT_Activator {
 
 	private static function set_default_options(): void {
 		$defaults = [
-			'wpappt_admin_email'   => get_option( 'admin_email' ),
-			'wpappt_sender_name'   => get_bloginfo( 'name' ),
-			'wpappt_booking_page'  => 0,
+			'wpappt_admin_email'      => get_option( 'admin_email' ),
+			'wpappt_sender_name'      => get_bloginfo( 'name' ),
+			'wpappt_booking_page'     => 0,
+			'wpappt_reminders_enabled' => 1,
+			'wpappt_reminder_days'    => 1,
 		];
 
 		foreach ( $defaults as $key => $value ) {
 			if ( false === get_option( $key ) ) {
 				add_option( $key, $value );
 			}
+		}
+	}
+
+	// -------------------------------------------------------------------------
+	// Cron scheduling
+	// -------------------------------------------------------------------------
+
+	private static function schedule_cron(): void {
+		if ( ! wp_next_scheduled( 'wpappt_send_reminders' ) ) {
+			// Schedule for 09:00 server time each day.
+			$start = strtotime( 'today 09:00:00' );
+			if ( $start < time() ) {
+				$start = strtotime( 'tomorrow 09:00:00' );
+			}
+			wp_schedule_event( $start, 'daily', 'wpappt_send_reminders' );
 		}
 	}
 }

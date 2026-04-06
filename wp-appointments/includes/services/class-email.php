@@ -46,6 +46,9 @@ class WPAPPT_Service_Email {
 
 		// Admin sends a manual follow-up from the booking detail page.
 		add_action( 'wpappt_send_followup_email', [ $this, 'on_followup' ], 10, 2 );
+
+		// Daily cron reminder — fired by WPAPPT_Service_Reminder.
+		add_action( 'wpappt_booking_reminder', [ $this, 'on_reminder' ] );
 	}
 
 	// -------------------------------------------------------------------------
@@ -78,6 +81,10 @@ class WPAPPT_Service_Email {
 
 	public function on_followup( int $booking_id, string $message ): void {
 		$this->send_followup( $booking_id, $message );
+	}
+
+	public function on_reminder( int $booking_id ): void {
+		$this->send_reminder_customer( $booking_id );
 	}
 
 	// -------------------------------------------------------------------------
@@ -201,6 +208,26 @@ class WPAPPT_Service_Email {
 				$data['booking']['customer_name']
 			),
 			'reschedule-admin',
+			$data
+		);
+	}
+
+	/** Sent to the customer the day before (or N days before) their appointment. */
+	public function send_reminder_customer( int $booking_id ): bool {
+		$data = $this->load_booking_data( $booking_id );
+		if ( null === $data ) {
+			return false;
+		}
+
+		return $this->send(
+			$data['booking']['customer_email'],
+			sprintf(
+				/* translators: 1: site name, 2: appointment date */
+				__( '[%1$s] Reminder: your appointment on %2$s', 'wp-appointments' ),
+				$data['site_name'],
+				$data['booking']['appointment_date']
+			),
+			'reminder-customer',
 			$data
 		);
 	}

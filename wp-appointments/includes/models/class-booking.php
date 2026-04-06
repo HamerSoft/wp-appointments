@@ -166,6 +166,46 @@ class WPAPPT_Model_Booking {
 	}
 
 	/**
+	 * Return confirmed bookings whose appointment date is exactly $days_ahead
+	 * days from today and for which a reminder has not yet been sent.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function find_due_for_reminder( int $days_ahead ): array {
+		$rows = $this->db->get_results(
+			$this->db->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT * FROM {$this->table}
+				  WHERE status = 'confirmed'
+				    AND appointment_date = DATE(NOW() + INTERVAL %d DAY)
+				    AND reminder_sent_at IS NULL",
+				$days_ahead
+			),
+			ARRAY_A
+		);
+
+		return $rows ?: [];
+	}
+
+	/**
+	 * Stamp reminder_sent_at on a booking so it is not reminded again.
+	 */
+	public function mark_reminder_sent( int $id ): bool {
+		$result = $this->db->update(
+			$this->table,
+			[
+				'reminder_sent_at' => gmdate( 'Y-m-d H:i:s' ),
+				'updated_at'       => gmdate( 'Y-m-d H:i:s' ),
+			],
+			[ 'id' => $id ],
+			[ '%s', '%s' ],
+			[ '%d' ]
+		);
+
+		return false !== $result;
+	}
+
+	/**
 	 * Count bookings that overlap a given date + time range.
 	 *
 	 * Used by the availability service to determine whether a slot is taken.

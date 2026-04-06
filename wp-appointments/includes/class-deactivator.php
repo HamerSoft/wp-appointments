@@ -15,6 +15,7 @@ class WPAPPT_Deactivator {
 		// Remove any scheduled cron events registered by this plugin.
 		$hooks = [
 			'wpappt_expire_tokens',
+			'wpappt_send_reminders',
 		];
 
 		foreach ( $hooks as $hook ) {

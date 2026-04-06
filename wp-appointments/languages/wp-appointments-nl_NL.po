@@ -266,6 +266,34 @@ msgstr "min"
 msgid "h"
 msgstr "u"
 
+# --- Reminder email ---
+
+msgid "This is a friendly reminder about your upcoming appointment."
+msgstr "Dit is een vriendelijke herinnering voor uw aankomende afspraak."
+
+msgid "[%1$s] Reminder: your appointment on %2$s"
+msgstr "[%1$s] Herinnering: uw afspraak op %2$s"
+
+# --- Settings: reminders section ---
+
+msgid "Appointment Reminders"
+msgstr "Afspraakherinneringen"
+
+msgid "Send reminders"
+msgstr "Herinneringen versturen"
+
+msgid "Enabled"
+msgstr "Ingeschakeld"
+
+msgid "Automatically email customers a reminder before their appointment."
+msgstr "Klanten automatisch een herinnering sturen voor hun afspraak."
+
+msgid "Days in advance"
+msgstr "Dagen van tevoren"
+
+msgid "How many days before the appointment to send the reminder. Default: 1 (the day before)."
+msgstr "Hoeveel dagen voor de afspraak de herinnering verstuurd wordt. Standaard: 1 (de dag ervoor)."
+
 # --- Time format: '24h' or '12h' ---
 # Translators: use '24h' for 24-hour clock or '12h' for AM/PM.
 
