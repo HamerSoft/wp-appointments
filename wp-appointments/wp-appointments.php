@@ -35,5 +35,10 @@ register_deactivation_hook( __FILE__, [ 'WPAPPT_Deactivator', 'deactivate' ] );
  * integrations (Divi) can be detected.
  */
 add_action( 'plugins_loaded', function (): void {
+	load_plugin_textdomain(
+		'wp-appointments',
+		false,
+		dirname( plugin_basename( __FILE__ ) ) . '/languages'
+	);
 	WPAPPT_Plugin::get_instance();
 } );

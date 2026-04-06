@@ -1,0 +1,273 @@
+# Dutch (nl_NL) translation for WP Appointments.
+# Copyright (C) 2024
+# This file is distributed under the same license as the WP Appointments plugin.
+msgid ""
+msgstr ""
+"Project-Id-Version: WP Appointments 1.0.0\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2024-01-01 00:00+0000\n"
+"PO-Revision-Date: 2024-01-01 00:00+0000\n"
+"Last-Translator: \n"
+"Language-Team: Dutch\n"
+"Language: nl_NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+# --- Progress bar step labels ---
+
+msgid "Service"
+msgstr "Behandeling"
+
+msgid "Date"
+msgstr "Datum"
+
+msgid "Time"
+msgstr "Tijd"
+
+msgid "Details"
+msgstr "Gegevens"
+
+msgid "Confirm"
+msgstr "Bevestigen"
+
+# --- Step headings ---
+
+msgid "Choose a service"
+msgstr "Kies een behandeling"
+
+msgid "Choose a date"
+msgstr "Kies een datum"
+
+msgid "Choose a time"
+msgstr "Kies een tijd"
+
+msgid "Your details"
+msgstr "Uw gegevens"
+
+msgid "Review your booking"
+msgstr "Boeking controleren"
+
+msgid "Booking request sent!"
+msgstr "Boekingsverzoek verstuurd!"
+
+# --- Navigation buttons ---
+
+msgid "Next →"
+msgstr "Volgende →"
+
+msgid "← Back"
+msgstr "← Terug"
+
+msgid "← Edit details"
+msgstr "← Gegevens aanpassen"
+
+msgid "Review booking →"
+msgstr "Boeking controleren →"
+
+msgid "Confirm booking"
+msgstr "Boeking bevestigen"
+
+msgid "Sending…"
+msgstr "Versturen…"
+
+# --- Form field labels ---
+
+msgid "Full name"
+msgstr "Volledige naam"
+
+msgid "Email address"
+msgstr "E-mailadres"
+
+msgid "Phone number"
+msgstr "Telefoonnummer"
+
+msgid "Injury or health notes"
+msgstr "Blessures of gezondheidsnotities"
+
+msgid "Additional comments"
+msgstr "Overige opmerkingen"
+
+msgid "(optional)"
+msgstr "(optioneel)"
+
+# --- Validation errors ---
+
+msgid "Please enter your name."
+msgstr "Vul uw naam in."
+
+msgid "Please enter your email address."
+msgstr "Vul uw e-mailadres in."
+
+msgid "Please enter a valid email address."
+msgstr "Vul een geldig e-mailadres in."
+
+msgid "Please enter your phone number."
+msgstr "Vul uw telefoonnummer in."
+
+msgid "Please enter a valid phone number (digits, spaces, +, – allowed)."
+msgstr "Vul een geldig telefoonnummer in (cijfers, spaties, +, – toegestaan)."
+
+# --- Booking summary row labels ---
+
+msgid "Name"
+msgstr "Naam"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Phone"
+msgstr "Telefoon"
+
+msgid "Health notes"
+msgstr "Gezondheidsnotities"
+
+msgid "Comments"
+msgstr "Opmerkingen"
+
+# --- Status / notice messages ---
+
+msgid "Loading…"
+msgstr "Laden…"
+
+msgid "No services are currently available."
+msgstr "Er zijn momenteel geen behandelingen beschikbaar."
+
+msgid "No times are available on this date. Go back and choose another day."
+msgstr "Er zijn geen tijden beschikbaar op deze datum. Ga terug en kies een andere dag."
+
+msgid "Once confirmed, your booking request is sent for approval. You'll receive an email when it's confirmed."
+msgstr "Zodra u bevestigt, wordt uw boekingsverzoek ter goedkeuring verstuurd. U ontvangt een e-mail wanneer uw afspraak is bevestigd."
+
+msgid "Something went wrong. Please try again."
+msgstr "Er is iets misgegaan. Probeer het opnieuw."
+
+msgid "Could not load services. Please refresh the page and try again."
+msgstr "Behandelingen konden niet worden geladen. Vernieuw de pagina en probeer het opnieuw."
+
+msgid "Could not load available times. Please try again."
+msgstr "Beschikbare tijden konden niet worden geladen. Probeer het opnieuw."
+
+# --- Success screen ---
+
+msgid "Thank you, {name}. Your request for {service} on {date} at {time} has been received."
+msgstr "Bedankt, {name}. Uw verzoek voor {service} op {date} om {time} is ontvangen."
+
+msgid "You'll get a confirmation email at {email} once your appointment is approved."
+msgstr "U ontvangt een bevestigingsmail op {email} zodra uw afspraak is goedgekeurd."
+
+# --- Accessibility labels ---
+
+msgid "Booking steps"
+msgstr "Boekingsstappen"
+
+msgid "Date picker"
+msgstr "Datumkiezer"
+
+msgid "Previous month"
+msgstr "Vorige maand"
+
+msgid "Next month"
+msgstr "Volgende maand"
+
+msgid ", selected"
+msgstr ", geselecteerd"
+
+# --- Calendar month names ---
+
+msgid "January"
+msgstr "Januari"
+
+msgid "February"
+msgstr "Februari"
+
+msgid "March"
+msgstr "Maart"
+
+msgid "April"
+msgstr "April"
+
+msgid "May"
+msgstr "Mei"
+
+msgid "June"
+msgstr "Juni"
+
+msgid "July"
+msgstr "Juli"
+
+msgid "August"
+msgstr "Augustus"
+
+msgid "September"
+msgstr "September"
+
+msgid "October"
+msgstr "Oktober"
+
+msgid "November"
+msgstr "November"
+
+msgid "December"
+msgstr "December"
+
+# --- Calendar short day names (starting Sunday) ---
+
+msgid "Su"
+msgstr "Zo"
+
+msgid "Mo"
+msgstr "Ma"
+
+msgid "Tu"
+msgstr "Di"
+
+msgid "We"
+msgstr "Wo"
+
+msgid "Th"
+msgstr "Do"
+
+msgid "Fr"
+msgstr "Vr"
+
+msgid "Sa"
+msgstr "Za"
+
+# --- Calendar long day names (starting Sunday) ---
+
+msgid "Sunday"
+msgstr "Zondag"
+
+msgid "Monday"
+msgstr "Maandag"
+
+msgid "Tuesday"
+msgstr "Dinsdag"
+
+msgid "Wednesday"
+msgstr "Woensdag"
+
+msgid "Thursday"
+msgstr "Donderdag"
+
+msgid "Friday"
+msgstr "Vrijdag"
+
+msgid "Saturday"
+msgstr "Zaterdag"
+
+# --- Duration units ---
+
+msgid "min"
+msgstr "min"
+
+msgid "h"
+msgstr "u"
+
+# --- Time format: '24h' or '12h' ---
+# Translators: use '24h' for 24-hour clock or '12h' for AM/PM.
+
+msgid "24h"
+msgstr "24h"

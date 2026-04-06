@@ -6,6 +6,7 @@
 	 * Config (injected via wp_localize_script as window.WPAppt)
 	 * ========================================================================= */
 	var cfg = window.WPAppt || {};
+	var s   = cfg.strings || {};
 
 	/* =========================================================================
 	 * State
@@ -79,7 +80,7 @@
 				renderStep1();
 			} )
 			.catch( function () {
-				showError( 'step-1-content', 'Could not load services. Please refresh the page and try again.' );
+				showError( 'step-1-content', s.errLoadServices );
 			} );
 	}
 
@@ -92,7 +93,7 @@
 				renderStep3();
 			} )
 			.catch( function () {
-				showError( 'step-3-content', 'Could not load available times. Please try again.' );
+				showError( 'step-3-content', s.errLoadSlots );
 			} );
 	}
 
@@ -102,12 +103,12 @@
 	function renderFrame() {
 		container.innerHTML =
 			'<div class="wpappt-widget">' +
-				'<ol class="wpappt-progress" aria-label="Booking steps">' +
-					progressItem( 1, 'Service' ) +
-					progressItem( 2, 'Date' ) +
-					progressItem( 3, 'Time' ) +
-					progressItem( 4, 'Details' ) +
-					progressItem( 5, 'Confirm' ) +
+				'<ol class="wpappt-progress" aria-label="' + esc( s.ariaBookingSteps ) + '">' +
+					progressItem( 1, s.progressService ) +
+					progressItem( 2, s.progressDate    ) +
+					progressItem( 3, s.progressTime    ) +
+					progressItem( 4, s.progressDetails ) +
+					progressItem( 5, s.progressConfirm ) +
 				'</ol>' +
 				'<div class="wpappt-body">' +
 					'<div id="step-1-content"></div>' +
@@ -123,7 +124,7 @@
 	function progressItem( n, label ) {
 		return '<li class="wpappt-progress__item" data-step="' + n + '">' +
 			'<span class="wpappt-progress__num">' + n + '</span>' +
-			'<span class="wpappt-progress__label">' + label + '</span>' +
+			'<span class="wpappt-progress__label">' + esc( label ) + '</span>' +
 			'</li>';
 	}
 
@@ -136,10 +137,10 @@
 		}
 
 		container.querySelectorAll( '.wpappt-progress__item' ).forEach( function ( item ) {
-			var s = parseInt( item.getAttribute( 'data-step' ), 10 );
-			item.classList.toggle( 'is-done',   s < n );
-			item.classList.toggle( 'is-active', s === n );
-			if ( s === n ) {
+			var step = parseInt( item.getAttribute( 'data-step' ), 10 );
+			item.classList.toggle( 'is-done',   step < n );
+			item.classList.toggle( 'is-active', step === n );
+			if ( step === n ) {
 				item.setAttribute( 'aria-current', 'step' );
 			} else {
 				item.removeAttribute( 'aria-current' );
@@ -153,11 +154,11 @@
 	 * Step 1 — Service selection
 	 * ========================================================================= */
 	function renderStep1() {
-		var el  = document.getElementById( 'step-1-content' );
-		var html = '<h2 class="wpappt-step-title">Choose a service</h2>';
+		var el   = document.getElementById( 'step-1-content' );
+		var html = '<h2 class="wpappt-step-title">' + esc( s.titleService ) + '</h2>';
 
 		if ( ! state.services.length ) {
-			el.innerHTML = html + '<p class="wpappt-notice">No services are currently available.</p>';
+			el.innerHTML = html + '<p class="wpappt-notice">' + esc( s.noticeNoServices ) + '</p>';
 			setStep( 1 );
 			return;
 		}
@@ -173,7 +174,7 @@
 		} );
 		html += '</ul>';
 		html += '<div class="wpappt-nav wpappt-nav--right">' +
-			'<button class="wpappt-btn wpappt-btn--primary" id="step1-next"' + ( state.service ? '' : ' disabled' ) + '>Next &rarr;</button>' +
+			'<button class="wpappt-btn wpappt-btn--primary" id="step1-next"' + ( state.service ? '' : ' disabled' ) + '>' + esc( s.btnNext ) + '</button>' +
 			'</div>';
 
 		el.innerHTML = html;
@@ -202,7 +203,7 @@
 		} );
 		card.classList.add( 'is-selected' );
 		var id = parseInt( card.getAttribute( 'data-id' ), 10 );
-		state.service = state.services.find( function ( s ) { return s.id === id; } );
+		state.service = state.services.find( function ( sv ) { return sv.id === id; } );
 		document.getElementById( 'step1-next' ).disabled = false;
 	}
 
@@ -212,11 +213,11 @@
 	function renderStep2() {
 		var el = document.getElementById( 'step-2-content' );
 		el.innerHTML =
-			'<h2 class="wpappt-step-title">Choose a date</h2>' +
+			'<h2 class="wpappt-step-title">' + esc( s.titleDate ) + '</h2>' +
 			'<div id="wpappt-calendar"></div>' +
 			'<div class="wpappt-nav">' +
-				'<button class="wpappt-btn wpappt-btn--ghost" id="step2-back">&larr; Back</button>' +
-				'<button class="wpappt-btn wpappt-btn--primary" id="step2-next"' + ( state.date ? '' : ' disabled' ) + '>Next &rarr;</button>' +
+				'<button class="wpappt-btn wpappt-btn--ghost" id="step2-back">' + esc( s.btnBack ) + '</button>' +
+				'<button class="wpappt-btn wpappt-btn--primary" id="step2-next"' + ( state.date ? '' : ' disabled' ) + '>' + esc( s.btnNext ) + '</button>' +
 			'</div>';
 
 		renderCalendar();
@@ -243,24 +244,22 @@
 		var today = new Date();
 		today.setHours( 0, 0, 0, 0 );
 
-		var firstDay   = new Date( year, month, 1 );
-		var lastDay    = new Date( year, month + 1, 0 );
-		var monthNames = [ 'January', 'February', 'March', 'April', 'May', 'June',
-		                   'July', 'August', 'September', 'October', 'November', 'December' ];
-		var dayNames   = [ 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa' ];
-
+		var firstDay      = new Date( year, month, 1 );
+		var lastDay       = new Date( year, month + 1, 0 );
+		var monthNames    = s.monthNames  || [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
+		var dayNames      = s.dayNames    || [ 'Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa' ];
 		var isPrevDisabled = ( year === today.getFullYear() && month <= today.getMonth() );
 
-		var html = '<div class="wpappt-cal" role="group" aria-label="Date picker">';
+		var html = '<div class="wpappt-cal" role="group" aria-label="' + esc( s.ariaDatePicker ) + '">';
 
 		html += '<div class="wpappt-cal__header">' +
-			'<button class="wpappt-cal__nav" id="cal-prev" aria-label="Previous month"' + ( isPrevDisabled ? ' disabled' : '' ) + '>&#8249;</button>' +
-			'<span class="wpappt-cal__title" aria-live="polite">' + monthNames[ month ] + ' ' + year + '</span>' +
-			'<button class="wpappt-cal__nav" id="cal-next" aria-label="Next month">&#8250;</button>' +
+			'<button class="wpappt-cal__nav" id="cal-prev" aria-label="' + esc( s.ariaPrevMonth ) + '"' + ( isPrevDisabled ? ' disabled' : '' ) + '>&#8249;</button>' +
+			'<span class="wpappt-cal__title" aria-live="polite">' + esc( monthNames[ month ] ) + ' ' + year + '</span>' +
+			'<button class="wpappt-cal__nav" id="cal-next" aria-label="' + esc( s.ariaNextMonth ) + '">&#8250;</button>' +
 			'</div>';
 
 		html += '<div class="wpappt-cal__grid wpappt-cal__grid--head" aria-hidden="true">';
-		dayNames.forEach( function ( d ) { html += '<div class="wpappt-cal__day-name">' + d + '</div>'; } );
+		dayNames.forEach( function ( d ) { html += '<div class="wpappt-cal__day-name">' + esc( d ) + '</div>'; } );
 		html += '</div>';
 
 		html += '<div class="wpappt-cal__grid wpappt-cal__grid--days">';
@@ -275,8 +274,9 @@
 			var isPast   = cellDate < today;
 			var isSel    = state.date === dateStr;
 			var cls      = 'wpappt-cal__cell' + ( isPast ? ' is-past' : ' is-available' ) + ( isSel ? ' is-selected' : '' );
+			var ariaLabel = formatDisplayDate( dateStr ) + ( isSel ? s.ariaSelected : '' );
 			html += '<div class="' + cls + '"' +
-				( ! isPast ? ' data-date="' + dateStr + '" role="button" tabindex="0" aria-label="' + formatDisplayDate( dateStr ) + ( isSel ? ', selected' : '' ) + '"' : ' aria-hidden="true"' ) +
+				( ! isPast ? ' data-date="' + dateStr + '" role="button" tabindex="0" aria-label="' + esc( ariaLabel ) + '"' : ' aria-hidden="true"' ) +
 				'>' + d + '</div>';
 		}
 
@@ -328,22 +328,22 @@
 			} );
 			slotsHtml += '</ul>';
 		} else {
-			slotsHtml = '<p class="wpappt-notice">No times are available on this date. Go back and choose another day.</p>';
+			slotsHtml = '<p class="wpappt-notice">' + esc( s.noticeNoSlots ) + '</p>';
 		}
 
 		el.innerHTML =
-			'<h2 class="wpappt-step-title">Choose a time</h2>' +
+			'<h2 class="wpappt-step-title">' + esc( s.titleTime ) + '</h2>' +
 			'<p class="wpappt-step-sub">' + formatDisplayDate( state.date ) + ' &mdash; ' + esc( state.service.name ) + '</p>' +
 			slotsHtml +
 			'<div class="wpappt-nav">' +
-				'<button class="wpappt-btn wpappt-btn--ghost" id="step3-back">&larr; Back</button>' +
-				( hasSlots ? '<button class="wpappt-btn wpappt-btn--primary" id="step3-next"' + ( state.slot ? '' : ' disabled' ) + '>Next &rarr;</button>' : '' ) +
+				'<button class="wpappt-btn wpappt-btn--ghost" id="step3-back">' + esc( s.btnBack ) + '</button>' +
+				( hasSlots ? '<button class="wpappt-btn wpappt-btn--primary" id="step3-next"' + ( state.slot ? '' : ' disabled' ) + '>' + esc( s.btnNext ) + '</button>' : '' ) +
 			'</div>';
 
 		if ( hasSlots ) {
 			el.querySelectorAll( '.wpappt-slot' ).forEach( function ( li ) {
 				li.addEventListener( 'click', function () {
-					el.querySelectorAll( '.wpappt-slot' ).forEach( function ( s ) { s.classList.remove( 'is-selected' ); } );
+					el.querySelectorAll( '.wpappt-slot' ).forEach( function ( sl ) { sl.classList.remove( 'is-selected' ); } );
 					li.classList.add( 'is-selected' );
 					state.slot = { start_time: li.getAttribute( 'data-start' ), end_time: li.getAttribute( 'data-end' ) };
 					document.getElementById( 'step3-next' ).disabled = false;
@@ -375,34 +375,34 @@
 		var f  = state.form;
 
 		el.innerHTML =
-			'<h2 class="wpappt-step-title">Your details</h2>' +
+			'<h2 class="wpappt-step-title">' + esc( s.titleDetails ) + '</h2>' +
 			'<form id="wpappt-details-form" novalidate>' +
 				'<div class="wpappt-field">' +
-					'<label for="wpappt-name">Full name <span class="wpappt-required" aria-hidden="true">*</span></label>' +
+					'<label for="wpappt-name">' + esc( s.labelName ) + ' <span class="wpappt-required" aria-hidden="true">*</span></label>' +
 					'<input type="text" id="wpappt-name" name="name" required autocomplete="name" value="' + esc( f.name ) + '">' +
 					'<span class="wpappt-field-error" id="err-name" role="alert" hidden></span>' +
 				'</div>' +
 				'<div class="wpappt-field">' +
-					'<label for="wpappt-email">Email address <span class="wpappt-required" aria-hidden="true">*</span></label>' +
+					'<label for="wpappt-email">' + esc( s.labelEmail ) + ' <span class="wpappt-required" aria-hidden="true">*</span></label>' +
 					'<input type="email" id="wpappt-email" name="email" required autocomplete="email" value="' + esc( f.email ) + '">' +
 					'<span class="wpappt-field-error" id="err-email" role="alert" hidden></span>' +
 				'</div>' +
 				'<div class="wpappt-field">' +
-					'<label for="wpappt-phone">Phone number <span class="wpappt-required" aria-hidden="true">*</span></label>' +
+					'<label for="wpappt-phone">' + esc( s.labelPhone ) + ' <span class="wpappt-required" aria-hidden="true">*</span></label>' +
 					'<input type="tel" id="wpappt-phone" name="phone" required autocomplete="tel" value="' + esc( f.phone ) + '">' +
 					'<span class="wpappt-field-error" id="err-phone" role="alert" hidden></span>' +
 				'</div>' +
 				'<div class="wpappt-field">' +
-					'<label for="wpappt-injury">Injury or health notes <span class="wpappt-optional">(optional)</span></label>' +
+					'<label for="wpappt-injury">' + esc( s.labelInjury ) + ' <span class="wpappt-optional">' + esc( s.labelOptional ) + '</span></label>' +
 					'<textarea id="wpappt-injury" name="injury_notes" rows="3">' + esc( f.injury_notes ) + '</textarea>' +
 				'</div>' +
 				'<div class="wpappt-field">' +
-					'<label for="wpappt-comments">Additional comments <span class="wpappt-optional">(optional)</span></label>' +
+					'<label for="wpappt-comments">' + esc( s.labelComments ) + ' <span class="wpappt-optional">' + esc( s.labelOptional ) + '</span></label>' +
 					'<textarea id="wpappt-comments" name="comments" rows="3">' + esc( f.comments ) + '</textarea>' +
 				'</div>' +
 				'<div class="wpappt-nav">' +
-					'<button type="button" class="wpappt-btn wpappt-btn--ghost" id="step4-back">&larr; Back</button>' +
-					'<button type="submit" class="wpappt-btn wpappt-btn--primary">Review booking &rarr;</button>' +
+					'<button type="button" class="wpappt-btn wpappt-btn--ghost" id="step4-back">' + esc( s.btnBack ) + '</button>' +
+					'<button type="submit" class="wpappt-btn wpappt-btn--primary">' + esc( s.btnReview ) + '</button>' +
 				'</div>' +
 			'</form>';
 
@@ -446,13 +446,13 @@
 		var email = el.querySelector( '#wpappt-email' ).value.trim();
 		var phone = el.querySelector( '#wpappt-phone' ).value.trim();
 
-		setFieldError( 'wpappt-name',  'err-name',  name  ? '' : 'Please enter your name.' );
+		setFieldError( 'wpappt-name',  'err-name',  name  ? '' : s.errNameRequired );
 		setFieldError( 'wpappt-email', 'err-email',
-			! email ? 'Please enter your email address.' :
-			! isValidEmail( email ) ? 'Please enter a valid email address.' : '' );
+			! email ? s.errEmailRequired :
+			! isValidEmail( email ) ? s.errEmailInvalid : '' );
 		setFieldError( 'wpappt-phone', 'err-phone',
-		! phone                ? 'Please enter your phone number.' :
-		! isValidPhone( phone ) ? 'Please enter a valid phone number (digits, spaces, +, - allowed).' : '' );
+			! phone                ? s.errPhoneRequired :
+			! isValidPhone( phone ) ? s.errPhoneInvalid : '' );
 
 		return valid;
 	}
@@ -465,25 +465,25 @@
 		var f  = state.form;
 
 		var extraRows = '';
-		if ( f.injury_notes ) extraRows += summaryRow( 'Health notes', f.injury_notes );
-		if ( f.comments )     extraRows += summaryRow( 'Comments',     f.comments );
+		if ( f.injury_notes ) extraRows += summaryRow( s.summaryHealthNotes, f.injury_notes );
+		if ( f.comments )     extraRows += summaryRow( s.summaryComments,    f.comments );
 
 		el.innerHTML =
-			'<h2 class="wpappt-step-title">Review your booking</h2>' +
+			'<h2 class="wpappt-step-title">' + esc( s.titleReview ) + '</h2>' +
 			'<dl class="wpappt-summary">' +
-				summaryRow( 'Service', state.service.name ) +
-				summaryRow( 'Date',    formatDisplayDate( state.date ) ) +
-				summaryRow( 'Time',    formatTime( state.slot.start_time ) + ' &ndash; ' + formatTime( state.slot.end_time ) ) +
-				summaryRow( 'Name',    f.name ) +
-				summaryRow( 'Email',   f.email ) +
-				summaryRow( 'Phone',   f.phone ) +
+				summaryRow( s.summaryService, state.service.name ) +
+				summaryRow( s.summaryDate,    formatDisplayDate( state.date ) ) +
+				summaryRow( s.summaryTime,    formatTime( state.slot.start_time ) + ' \u2013 ' + formatTime( state.slot.end_time ) ) +
+				summaryRow( s.summaryName,    f.name ) +
+				summaryRow( s.summaryEmail,   f.email ) +
+				summaryRow( s.summaryPhone,   f.phone ) +
 				extraRows +
 			'</dl>' +
-			'<p class="wpappt-notice wpappt-notice--info">Once confirmed, your booking request is sent for approval. You\'ll receive an email when it\'s confirmed.</p>' +
+			'<p class="wpappt-notice wpappt-notice--info">' + esc( s.noticeReviewInfo ) + '</p>' +
 			'<div id="wpappt-submit-error" class="wpappt-notice wpappt-notice--error" role="alert" hidden></div>' +
 			'<div class="wpappt-nav">' +
-				'<button class="wpappt-btn wpappt-btn--ghost" id="step5-back">&larr; Edit details</button>' +
-				'<button class="wpappt-btn wpappt-btn--primary" id="step5-submit">Confirm booking</button>' +
+				'<button class="wpappt-btn wpappt-btn--ghost" id="step5-back">' + esc( s.btnEditDetails ) + '</button>' +
+				'<button class="wpappt-btn wpappt-btn--primary" id="step5-submit">' + esc( s.btnConfirm ) + '</button>' +
 			'</div>';
 
 		document.getElementById( 'step5-back' ).addEventListener( 'click', function () {
@@ -504,15 +504,21 @@
 	 * Step 6 — Success
 	 * ========================================================================= */
 	function renderStep6() {
-		var el = document.getElementById( 'step-6-content' );
+		var el  = document.getElementById( 'step-6-content' );
+		var msg = ( s.successMessage || '' )
+			.replace( '{name}',    esc( state.form.name ) )
+			.replace( '{service}', esc( state.service.name ) )
+			.replace( '{date}',    formatDisplayDate( state.date ) )
+			.replace( '{time}',    formatTime( state.slot.start_time ) );
+		var emailLine = ( s.successEmail || '' )
+			.replace( '{email}', '<strong>' + esc( state.form.email ) + '</strong>' );
+
 		el.innerHTML =
 			'<div class="wpappt-success">' +
 				'<div class="wpappt-success__icon" aria-hidden="true">&#10003;</div>' +
-				'<h2 class="wpappt-step-title">Booking request sent!</h2>' +
-				'<p>Thank you, <strong>' + esc( state.form.name ) + '</strong>. Your request for <strong>' +
-				esc( state.service.name ) + '</strong> on <strong>' + formatDisplayDate( state.date ) +
-				'</strong> at <strong>' + formatTime( state.slot.start_time ) + '</strong> has been received.</p>' +
-				'<p>You\'ll get a confirmation email at <strong>' + esc( state.form.email ) + '</strong> once your appointment is approved.</p>' +
+				'<h2 class="wpappt-step-title">' + esc( s.titleSuccess ) + '</h2>' +
+				'<p>' + msg + '</p>' +
+				'<p>' + emailLine + '</p>' +
 			'</div>';
 		setStep( 6 );
 	}
@@ -525,7 +531,7 @@
 		var errEl     = document.getElementById( 'wpappt-submit-error' );
 
 		submitBtn.disabled    = true;
-		submitBtn.textContent = 'Sending\u2026';
+		submitBtn.textContent = s.btnSending;
 		errEl.hidden          = true;
 
 		apiFetch( 'bookings', {
@@ -546,8 +552,8 @@
 			} )
 			.catch( function ( err ) {
 				submitBtn.disabled    = false;
-				submitBtn.textContent = 'Confirm booking';
-				var msg = ( err && err.message ) ? err.message : 'Something went wrong. Please try again.';
+				submitBtn.textContent = s.btnConfirm;
+				var msg = ( err && err.message ) ? err.message : s.errGeneral;
 				errEl.textContent = msg;
 				errEl.hidden      = false;
 			} );
@@ -558,7 +564,7 @@
 	 * ========================================================================= */
 	function showLoading( id ) {
 		var el = document.getElementById( id );
-		if ( el ) el.innerHTML = '<div class="wpappt-loading" aria-live="polite" aria-busy="true">Loading&hellip;</div>';
+		if ( el ) el.innerHTML = '<div class="wpappt-loading" aria-live="polite" aria-busy="true">' + esc( s.loading ) + '</div>';
 	}
 
 	function showError( id, msg ) {
@@ -598,29 +604,35 @@
 
 	function formatDisplayDate( dateStr ) {
 		if ( ! dateStr ) return '';
-		var parts     = dateStr.split( '-' );
-		var d         = new Date( parseInt( parts[0], 10 ), parseInt( parts[1], 10 ) - 1, parseInt( parts[2], 10 ) );
-		var dayNames  = [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ];
-		var monNames  = [ 'January', 'February', 'March', 'April', 'May', 'June',
-		                  'July', 'August', 'September', 'October', 'November', 'December' ];
-		return dayNames[ d.getDay() ] + ', ' + d.getDate() + ' ' + monNames[ d.getMonth() ] + ' ' + d.getFullYear();
+		var parts        = dateStr.split( '-' );
+		var d            = new Date( parseInt( parts[0], 10 ), parseInt( parts[1], 10 ) - 1, parseInt( parts[2], 10 ) );
+		var dayNamesLong = s.dayNamesLong || [ 'Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday' ];
+		var monthNames   = s.monthNames   || [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
+		return dayNamesLong[ d.getDay() ] + ' ' + d.getDate() + ' ' + monthNames[ d.getMonth() ] + ' ' + d.getFullYear();
 	}
 
 	function formatTime( hhmm ) {
 		if ( ! hhmm ) return '';
-		var parts = hhmm.split( ':' );
-		var h     = parseInt( parts[0], 10 );
-		var m     = parts[1];
-		var ampm  = h >= 12 ? 'PM' : 'AM';
-		h = h % 12 || 12;
-		return h + ':' + m + ' ' + ampm;
+		if ( s.timeFormat === '12h' ) {
+			var parts = hhmm.split( ':' );
+			var h     = parseInt( parts[0], 10 );
+			var m     = parts[1];
+			var ampm  = h >= 12 ? 'PM' : 'AM';
+			h = h % 12 || 12;
+			return h + ':' + m + ' ' + ampm;
+		}
+		// 24h (default) — strip leading zero from hour for Dutch convention.
+		var p = hhmm.split( ':' );
+		return parseInt( p[0], 10 ) + ':' + p[1];
 	}
 
 	function formatDuration( mins ) {
-		if ( mins < 60 ) return mins + ' min';
+		var minLabel  = s.durationMin  || 'min';
+		var hourLabel = s.durationHour || 'h';
+		if ( mins < 60 ) return mins + ' ' + minLabel;
 		var h = Math.floor( mins / 60 );
 		var m = mins % 60;
-		return h + 'h' + ( m ? ' ' + m + ' min' : '' );
+		return h + hourLabel + ( m ? ' ' + m + ' ' + minLabel : '' );
 	}
 
 } )();

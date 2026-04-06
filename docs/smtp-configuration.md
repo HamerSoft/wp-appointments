@@ -1,109 +1,61 @@
 # SMTP Configuration
 
-The plugin sends transactional emails (booking confirmations, cancellations, follow-ups) via WordPress's `wp_mail`. By default WordPress uses the server's PHP `mail()` function, which is often blocked or lands in spam.
+The plugin sends transactional emails via WordPress's `wp_mail`. By default WordPress uses the server's PHP `mail()` function, which is often blocked or lands in spam. Configuring SMTP routes all outgoing mail through your own domain email instead.
 
-## Recommended: transactional email service
+## How it works
 
-Do **not** use your personal `@live.nl` mailbox for sending. If those credentials leak, your entire personal account is at risk.
-
-Instead, use a dedicated transactional email service. They issue an API key scoped only to sending mail — if it ever leaks, you revoke it and generate a new one without touching your personal account.
-
-**[Brevo](https://brevo.com)** is the recommended choice:
-- Free tier: 300 emails/day (more than enough for a solo practice)
-- No credit card required
-- Provides SMTP credentials that work with this plugin out of the box
-
-After signing up, find your SMTP credentials under **Brevo → Transactional → Settings → SMTP & API**.
-
-| Field      | Value                        |
-|------------|------------------------------|
-| SMTP Host  | `smtp-relay.brevo.com`       |
-| SMTP Port  | `587`                        |
-| Encryption | `TLS`                        |
-| Username   | your Brevo account email     |
-| Password   | your Brevo **SMTP key** (not your Brevo login password) |
+Use the email address that came with your domain registration (e.g. `bookings@yourdomain.com`) as the SMTP sender. Set up automatic forwarding on that mailbox to your personal inbox — you'll receive all booking notifications there without ever having to check the domain mailbox directly.
 
 ---
 
 ## Credential storage — resolution order
 
-The plugin resolves each setting in this order, using the first value it finds:
+The plugin resolves each SMTP setting in this order, using the first value it finds:
 
-1. **Environment variable** — set at the server/hosting level, never written to disk
-2. **`wp-config.php` constant** — in the file but not in the database
-3. **Settings page** (**Appointments → Settings → Outgoing Email**) — stored in the database
+| Setting | Sources |
+|---|---|
+| Host, port, encryption | Environment variable → `wp-config.php` constant → Settings page |
+| **Username, password** | **Environment variable → `wp-config.php` constant only** |
 
-Use the highest level your hosting provider supports.
-
----
-
-## Option A: environment variables (most secure)
-
-Set these on your server (via your hosting control panel, `.env` file, or web server config). The values never appear in any file you manage.
-
-```
-WPAPPT_SMTP_HOST=smtp-relay.brevo.com
-WPAPPT_SMTP_PORT=587
-WPAPPT_SMTP_ENCRYPTION=tls
-WPAPPT_SMTP_USERNAME=you@example.com
-WPAPPT_SMTP_PASSWORD=your-brevo-smtp-key
-```
-
-No changes to `wp-config.php` needed — the plugin reads env vars automatically.
+Credentials are **never stored in the database**. There is no username or password field in the settings page.
 
 ---
 
-## Option B: wp-config.php constants
+## Option A: wp-config.php constants (recommended)
 
-Add these above the `/* That's all, stop editing! */` line. The password is in a file on the server but never in the database.
+Add these above the `/* That's all, stop editing! */` line in `wp-config.php`. The credentials stay in a file on the server, not in the database.
 
 ```php
-define( 'WPAPPT_SMTP_HOST',       'smtp-relay.brevo.com' );
+define( 'WPAPPT_SMTP_HOST',       'mail.yourdomain.com' ); // from your registrar/host
 define( 'WPAPPT_SMTP_PORT',       587 );
 define( 'WPAPPT_SMTP_ENCRYPTION', 'tls' );
-define( 'WPAPPT_SMTP_USERNAME',   'you@example.com' );
-define( 'WPAPPT_SMTP_PASSWORD',   'your-brevo-smtp-key' );
+define( 'WPAPPT_SMTP_USERNAME',   'bookings@yourdomain.com' );
+define( 'WPAPPT_SMTP_PASSWORD',   'your-mailbox-password' );
 ```
 
-If your host supports env vars, prefer Option A and reference them here instead of hardcoding:
+> The SMTP host, port, and encryption values are provided by your domain registrar or hosting panel. Common examples: `mail.yourdomain.com` on port 587 with TLS.
 
-```php
-define( 'WPAPPT_SMTP_PASSWORD', getenv( 'WPAPPT_SMTP_PASSWORD' ) );
+---
+
+## Option B: environment variables
+
+Set these at the server or hosting level (via your hosting control panel or web server config). The values never appear in any file you manage directly.
+
+```
+WPAPPT_SMTP_HOST=mail.yourdomain.com
+WPAPPT_SMTP_PORT=587
+WPAPPT_SMTP_ENCRYPTION=tls
+WPAPPT_SMTP_USERNAME=bookings@yourdomain.com
+WPAPPT_SMTP_PASSWORD=your-mailbox-password
 ```
 
 ---
 
-## Option C: settings page
+## Settings page
 
-Fill in **Appointments → Settings → Outgoing Email (SMTP)**. Simplest to set up, but credentials are stored in the WordPress database. Acceptable for low-risk setups where database access is tightly controlled.
+**Appointments → Settings → Outgoing Email (SMTP)** lets you configure the host, port, and encryption. These non-sensitive values can safely live in the database.
 
----
-
-## Custom sender domain (recommended for production)
-
-By default, Brevo sends emails from a shared Brevo domain. Setting up your own sender domain means emails arrive as e.g. `noreply@yourdomain.com` instead, which looks more professional and significantly improves deliverability (less likely to land in spam).
-
-### Steps in Brevo
-
-1. Go to **Brevo → Senders & IPs → Domains**
-2. Click **Add a domain** and enter your domain (e.g. `yourdomain.com`)
-3. Brevo will give you a set of DNS records to add — typically two `TXT` records:
-   - **SPF** — tells mail servers Brevo is allowed to send on your behalf
-   - **DKIM** — cryptographically signs outgoing mail so receivers can verify it hasn't been tampered with
-4. Add those records via your domain registrar's DNS settings
-5. Click **Verify** in Brevo once the records have propagated (can take up to 24 hours)
-
-### Update the sender address in the plugin
-
-Once your domain is verified, update the **Sender Name** and **Notification Email** fields under **Appointments → Settings** to use your custom domain address, e.g. `noreply@yourdomain.com`. This address must match a verified sender in Brevo.
-
-### Why this matters
-
-| Without custom domain | With custom domain |
-|---|---|
-| `From: Your Name via brevo.com` | `From: Your Name <noreply@yourdomain.com>` |
-| Higher spam risk | Better deliverability |
-| Looks third-party | Looks like your own site |
+Username and password are not on the settings page — set them via one of the options above.
 
 ---
 
