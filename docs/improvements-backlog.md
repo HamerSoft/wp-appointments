@@ -4,7 +4,7 @@ Planned improvements beyond the initial build. Each item includes implementation
 
 ---
 
-## 1. Reminder emails
+## ~~1. Reminder emails~~ ✓ Done
 
 **What:** Send an automated email to the customer the day before their confirmed appointment.
 
@@ -22,7 +22,7 @@ Planned improvements beyond the initial build. Each item includes implementation
 
 ---
 
-## 3. Admin booking page URL validation
+## ~~3. Admin booking page URL validation~~ ✓ Done
 
 **What:** Validate that the booking page selected in settings actually exists and has the booking widget on it. Warn the admin if it is missing or unpublished.
 

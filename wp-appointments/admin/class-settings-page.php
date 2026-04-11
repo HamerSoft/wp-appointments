@@ -47,7 +47,7 @@ class WPAPPT_Admin_Settings_Page {
 			'wpappt_booking_page',
 			[
 				'type'              => 'integer',
-				'sanitize_callback' => 'absint',
+				'sanitize_callback' => [ $this, 'sanitize_booking_page' ],
 				'default'           => 0,
 			]
 		);
@@ -201,13 +201,42 @@ class WPAPPT_Admin_Settings_Page {
 	}
 
 	// -------------------------------------------------------------------------
+	// Booking page validation
+	// -------------------------------------------------------------------------
+
+	public function sanitize_booking_page( $value ): int {
+		$page_id = absint( $value );
+		if ( $page_id && ! $this->booking_page_is_valid( $page_id ) ) {
+			add_settings_error(
+				'wpappt_booking_page',
+				'wpappt_booking_page_invalid',
+				__( 'The selected booking page is not published. Reschedule links in emails will be broken.', 'wp-appointments' ),
+				'warning'
+			);
+		}
+		return $page_id;
+	}
+
+	private function booking_page_is_valid( int $page_id ): bool {
+		$post = get_post( $page_id );
+		return $post && $post->post_type === 'page' && $post->post_status === 'publish';
+	}
+
+	// -------------------------------------------------------------------------
 	// Page render
 	// -------------------------------------------------------------------------
 
 	public function render(): void {
+		$page_id = (int) get_option( 'wpappt_booking_page', 0 );
+		$show_page_warning = $page_id && ! $this->booking_page_is_valid( $page_id );
 		?>
 		<div class="wrap">
 			<h1><?php esc_html_e( 'Appointments — Settings', 'wp-appointments' ); ?></h1>
+			<?php if ( $show_page_warning ) : ?>
+			<div class="notice notice-warning">
+				<p><?php esc_html_e( 'The selected booking page is not published. Reschedule links in emails will be broken.', 'wp-appointments' ); ?></p>
+			</div>
+			<?php endif; ?>
 			<form method="post" action="options.php">
 				<?php
 				settings_fields( 'wpappt_options' );
