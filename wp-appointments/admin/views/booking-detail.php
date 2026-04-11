@@ -66,6 +66,12 @@ $can_cancel    = ( 'cancelled' !== $status );
 					<th><?php esc_html_e( 'Submitted', 'wp-appointments' ); ?></th>
 					<td><?php echo esc_html( $booking['created_at'] ); ?></td>
 				</tr>
+				<?php if ( ! empty( $booking['updated_at'] ) ) : ?>
+				<tr>
+					<th><?php esc_html_e( 'Last updated', 'wp-appointments' ); ?></th>
+					<td><?php echo esc_html( $booking['updated_at'] ); ?></td>
+				</tr>
+				<?php endif; ?>
 			</table>
 		</div>
 
