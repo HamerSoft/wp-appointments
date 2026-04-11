@@ -42,7 +42,7 @@ class WPAPPT_Controller_Reschedule {
 	 * @return \WP_REST_Response
 	 */
 	public function handle_get( \WP_REST_Request $request ): \WP_REST_Response {
-		if ( ! WPAPPT_Helper_Rate_Limiter::check( 'reschedule_get', $this->get_client_ip(), 10 ) ) {
+		if ( ! WPAPPT_Helper_Rate_Limiter::check( 'reschedule_get', WPAPPT_Helper_Rate_Limiter::get_client_ip(), 10 ) ) {
 			return new \WP_REST_Response(
 				[ 'message' => __( 'Too many requests. Please try again later.', 'wp-appointments' ) ],
 				429
@@ -90,7 +90,7 @@ class WPAPPT_Controller_Reschedule {
 	 */
 	public function process_reschedule( array $params ): \WP_REST_Response {
 		// --- 1. Rate limit ---------------------------------------------------
-		if ( ! WPAPPT_Helper_Rate_Limiter::check( 'reschedule_post', $this->get_client_ip(), 10 ) ) {
+		if ( ! WPAPPT_Helper_Rate_Limiter::check( 'reschedule_post', WPAPPT_Helper_Rate_Limiter::get_client_ip(), 10 ) ) {
 			return new \WP_REST_Response(
 				[ 'message' => __( 'Too many requests. Please try again later.', 'wp-appointments' ) ],
 				429
@@ -232,7 +232,4 @@ class WPAPPT_Controller_Reschedule {
 		];
 	}
 
-	public function get_client_ip(): string {
-		return WPAPPT_Helper_Rate_Limiter::get_client_ip();
-	}
 }

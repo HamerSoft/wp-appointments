@@ -75,17 +75,22 @@ class WPAPPT_Rest_Api {
 			'callback'            => [ $booking_controller, 'handle_create' ],
 			'permission_callback' => '__return_true',
 			'args'                => [
+				// service_id keeps absint so the REST framework's minimum:1 check
+				// receives an integer. All string fields are sanitised by
+				// WPAPPT_Helper_Sanitizer::booking_input() inside the controller —
+				// declaring a duplicate sanitize_callback here would mean any future
+				// change needs to be made in two places.
 				'service_id'       => [ 'required' => true,  'type' => 'integer', 'minimum' => 1, 'sanitize_callback' => 'absint' ],
-				'appointment_date' => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
-				'start_time'       => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
-				'customer_name'    => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
-				'customer_email'   => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_email' ],
-				'customer_phone'   => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
-				'injury_notes'     => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ],
-				'comments'         => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ],
+				'appointment_date' => [ 'required' => true,  'type' => 'string'  ],
+				'start_time'       => [ 'required' => true,  'type' => 'string'  ],
+				'customer_name'    => [ 'required' => true,  'type' => 'string'  ],
+				'customer_email'   => [ 'required' => true,  'type' => 'string'  ],
+				'customer_phone'   => [ 'required' => true,  'type' => 'string'  ],
+				'injury_notes'     => [ 'required' => false, 'type' => 'string',  'default' => '' ],
+				'comments'         => [ 'required' => false, 'type' => 'string',  'default' => '' ],
 				// Honeypot — must be empty. Bots that auto-fill forms will populate
 				// this field; the controller rejects any non-empty value silently.
-				'website'          => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field',     'default' => '' ],
+				'website'          => [ 'required' => false, 'type' => 'string',  'default' => '' ],
 			],
 		] );
 

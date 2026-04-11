@@ -46,7 +46,7 @@ Code quality improvements that do not add new features. Identified after the sec
 
 ---
 
-## 3. Sanitization defined in two places — drift risk
+## ~~3. Sanitization defined in two places — drift risk~~ ✓ Done
 
 **What:** `WPAPPT_Helper_Sanitizer::booking_input()` is the canonical sanitizer for booking fields, but `WPAPPT_Rest_Api::register_routes()` also declares a `sanitize_callback` for each of the same fields in the REST arg definitions. Both layers produce identical output, making the REST callbacks redundant. This already caused a two-file change when switching `injury_notes` and `comments` from `wp_kses_post` to `sanitize_textarea_field`.
 
@@ -61,7 +61,7 @@ Code quality improvements that do not add new features. Identified after the sec
 
 ---
 
-## 4. `get_client_ip()` wrappers in controllers are redundant
+## ~~4. `get_client_ip()` wrappers in controllers are redundant~~ ✓ Done
 
 **What:** After the security fix (item 1 of the security backlog), both `WPAPPT_Controller_Booking::get_client_ip()` and `WPAPPT_Controller_Reschedule::get_client_ip()` are identical one-liners:
 ```php
