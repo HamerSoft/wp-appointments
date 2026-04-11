@@ -72,6 +72,9 @@ class WPAPPT_Rest_Api {
 				'customer_phone'   => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
 				'injury_notes'     => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ],
 				'comments'         => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ],
+				// Honeypot — must be empty. Bots that auto-fill forms will populate
+				// this field; the controller rejects any non-empty value silently.
+				'website'          => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_text_field',     'default' => '' ],
 			],
 		] );
 

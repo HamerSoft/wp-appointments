@@ -59,7 +59,7 @@ Fixes identified in the 2026-04-11 security audit (`docs/security-audit.md`).
 
 ---
 
-## 3. Unauthenticated access to booking endpoint
+## ~~3. Unauthenticated access to booking endpoint~~ ✓ Done
 
 **Severity:** Low
 

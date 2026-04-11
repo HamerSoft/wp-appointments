@@ -81,6 +81,32 @@ class RateLimiterTest extends WpTestCase {
 		WPAPPT_Helper_Rate_Limiter::check( 'booking', '1.2.3.4', 5, 3600 );
 	}
 
+	// =========================================================================
+	// get_client_ip
+	// =========================================================================
+
+	/** @test */
+	public function get_client_ip_returns_remote_addr_when_trust_proxy_is_false(): void {
+		// WPAPPT_TRUST_PROXY is defined as false in the test bootstrap, so
+		// X-Forwarded-For must be ignored regardless of its value.
+		$_SERVER['REMOTE_ADDR']          = '10.0.0.1';
+		$_SERVER['HTTP_X_FORWARDED_FOR'] = '1.2.3.4';
+
+		$ip = WPAPPT_Helper_Rate_Limiter::get_client_ip();
+
+		unset( $_SERVER['HTTP_X_FORWARDED_FOR'] );
+
+		$this->assertSame( '10.0.0.1', $ip );
+	}
+
+	/** @test */
+	public function get_client_ip_returns_remote_addr_when_forwarded_for_is_absent(): void {
+		$_SERVER['REMOTE_ADDR'] = '192.168.1.50';
+		unset( $_SERVER['HTTP_X_FORWARDED_FOR'] );
+
+		$this->assertSame( '192.168.1.50', WPAPPT_Helper_Rate_Limiter::get_client_ip() );
+	}
+
 	/** @test */
 	public function different_actions_use_different_transient_keys(): void {
 		$keys = [];

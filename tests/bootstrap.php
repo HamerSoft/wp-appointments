@@ -51,6 +51,7 @@ if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
 // Plugin rate-limiting constants (normally set in wp-appointments.php)
 defined( 'WPAPPT_RATE_LIMIT'  ) || define( 'WPAPPT_RATE_LIMIT',  5 );
 defined( 'WPAPPT_RATE_WINDOW' ) || define( 'WPAPPT_RATE_WINDOW', 10 * MINUTE_IN_SECONDS );
+defined( 'WPAPPT_TRUST_PROXY' ) || define( 'WPAPPT_TRUST_PROXY', false );
 
 // ---------------------------------------------------------------------------
 // WordPress class stubs

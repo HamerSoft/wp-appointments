@@ -57,6 +57,19 @@ class WPAPPT_Controller_Booking {
 	 * @return array<string, mixed>|\WP_Error
 	 */
 	public function process_create( array $params ) {
+		// --- 0. Honeypot check -----------------------------------------------
+		// The booking form includes a CSS-hidden field named 'website'. Legitimate
+		// users never see or fill it. Bots that auto-fill forms will populate it,
+		// so any non-empty value means the submission is almost certainly automated.
+		// Return 400 without explanation to avoid tipping off the bot.
+		if ( ! empty( $params['website'] ) ) {
+			return new \WP_Error(
+				'invalid_request',
+				__( 'Invalid request.', 'wp-appointments' ),
+				[ 'status' => 400 ]
+			);
+		}
+
 		// --- 1. Rate limit ---------------------------------------------------
 		if ( ! WPAPPT_Helper_Rate_Limiter::check( 'booking', $this->get_client_ip(), WPAPPT_RATE_LIMIT, WPAPPT_RATE_WINDOW ) ) {
 			return new \WP_Error(

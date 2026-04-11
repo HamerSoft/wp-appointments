@@ -73,6 +73,36 @@ class BookingControllerTest extends WpTestCase {
 	}
 
 	// =========================================================================
+	// Honeypot
+	// =========================================================================
+
+	/** @test */
+	public function it_returns_400_when_honeypot_field_is_non_empty(): void {
+		$result = $this->makeController()->process_create(
+			$this->validParams( [ 'website' => 'http://spam.example.com' ] )
+		);
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'invalid_request', $result->get_error_code() );
+		$this->assertSame( 400, $result->get_error_data()['status'] );
+	}
+
+	/** @test */
+	public function it_does_not_reject_when_honeypot_field_is_empty(): void {
+		// An empty honeypot must not cause an early rejection — the request
+		// should reach the rate limiter (which blocks it here via the transient).
+		Functions\when( 'get_transient' )->justReturn( [ 'count' => 5, 'since' => time() ] );
+
+		$result = $this->makeController()->process_create(
+			$this->validParams( [ 'website' => '' ] )
+		);
+
+		// Reached the rate limiter — NOT a honeypot rejection.
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'rate_limited', $result->get_error_code() );
+	}
+
+	// =========================================================================
 	// Rate limiting
 	// =========================================================================
 

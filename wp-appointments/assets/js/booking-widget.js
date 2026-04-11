@@ -400,6 +400,12 @@
 					'<label for="wpappt-comments">' + esc( s.labelComments ) + ' <span class="wpappt-optional">' + esc( s.labelOptional ) + '</span></label>' +
 					'<textarea id="wpappt-comments" name="comments" rows="3">' + esc( f.comments ) + '</textarea>' +
 				'</div>' +
+				// Honeypot: visually hidden, never filled by real users.
+				// Bots that auto-fill forms will populate this field.
+				'<div class="wpappt-honeypot" aria-hidden="true">' +
+					'<label for="wpappt-website">Website</label>' +
+					'<input type="text" id="wpappt-website" name="website" tabindex="-1" autocomplete="off">' +
+				'</div>' +
 				'<div class="wpappt-nav">' +
 					'<button type="button" class="wpappt-btn wpappt-btn--ghost" id="step4-back">' + esc( s.btnBack ) + '</button>' +
 					'<button type="submit" class="wpappt-btn wpappt-btn--primary">' + esc( s.btnReview ) + '</button>' +
@@ -545,6 +551,7 @@
 				customer_phone:   state.form.phone,
 				injury_notes:     state.form.injury_notes,
 				comments:         state.form.comments,
+				website:          ( document.getElementById( 'wpappt-website' ) || {} ).value || '',
 			} ),
 		} )
 			.then( function () {
