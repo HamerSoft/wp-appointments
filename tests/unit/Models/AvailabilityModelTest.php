@@ -38,7 +38,7 @@ class AvailabilityModelTest extends WpTestCase {
 	public function find_blocked_for_date_returns_empty_array_when_no_rows(): void {
 		$db = $this->mockDb();
 		$db->shouldReceive( 'prepare' )->andReturn( 'sql' );
-		$db->shouldReceive( 'get_results' )->andReturn( false );
+		$db->shouldReceive( 'get_results' )->andReturn( [] );
 
 		$this->assertSame( [], $this->makeModel( $db )->find_blocked_for_date( '2026-06-15' ) );
 	}

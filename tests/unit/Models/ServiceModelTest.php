@@ -35,7 +35,7 @@ class ServiceModelTest extends WpTestCase {
 	/** @test */
 	public function find_all_active_returns_empty_array_when_no_rows(): void {
 		$db = $this->mockDb();
-		$db->shouldReceive( 'get_results' )->andReturn( false );
+		$db->shouldReceive( 'get_results' )->andReturn( [] );
 
 		$result = $this->makeModel( $db )->find_all_active();
 

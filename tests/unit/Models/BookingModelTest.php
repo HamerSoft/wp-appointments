@@ -236,8 +236,9 @@ class BookingModelTest extends WpTestCase {
 		$db             = $this->mockDb();
 		$capturedQuery  = '';
 
-		// No search/status filters → ORDER BY is embedded in the raw SQL
-		// string passed directly to get_results.
+		// build_limit() always produces placeholder values so prepare() is
+		// always called regardless of whether filters are present.
+		$db->shouldReceive( 'prepare' )->andReturn( 'sql' );
 		$db->shouldReceive( 'get_results' )
 		   ->withArgs( function ( string $sql ) use ( &$capturedQuery ): bool {
 			   $capturedQuery = $sql;
@@ -281,7 +282,7 @@ class BookingModelTest extends WpTestCase {
 	public function find_by_date_returns_empty_array_when_no_bookings(): void {
 		$db = $this->mockDb();
 		$db->shouldReceive( 'prepare' )->andReturn( 'sql' );
-		$db->shouldReceive( 'get_results' )->andReturn( false );
+		$db->shouldReceive( 'get_results' )->andReturn( [] );
 
 		$this->assertSame( [], $this->makeModel( $db )->find_by_date( '2026-06-15' ) );
 	}

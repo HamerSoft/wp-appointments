@@ -75,7 +75,7 @@ class WPAPPT_Controller_Booking {
 			return $error;
 		}
 
-		// --- 4. Slot availability --------------------------------------------
+		// --- 4. Slot availability (pre-check, no lock) -----------------------
 		$available = $this->availability_service->get_available_slots(
 			$data['appointment_date'],
 			$data['service_id']
@@ -92,23 +92,47 @@ class WPAPPT_Controller_Booking {
 			);
 		}
 
-		// --- 5. Calculate end_time from service duration ---------------------
-		$service              = $this->service_model->find( $data['service_id'] );
-		$data['end_time']     = $this->calculate_end_time(
+		// --- 5. Calculate end_time (needed before the lock query) ------------
+		$service          = $this->service_model->find( $data['service_id'] );
+		$data['end_time'] = $this->calculate_end_time(
 			$data['start_time'],
 			(int) $service['duration_mins']
 		);
 
-		// --- 6. Create booking -----------------------------------------------
+		// --- 6. Transactional double-check + insert --------------------------
+		// Lock overlapping rows with FOR UPDATE so a second concurrent request
+		// for the same slot blocks until this transaction commits or rolls back,
+		// closing the race window between the pre-check above and the insert.
+		global $wpdb;
+		$wpdb->query( 'START TRANSACTION' );
+
+		$overlap = $this->booking_model->count_overlapping_for_update(
+			$data['appointment_date'],
+			$data['start_time'],
+			$data['end_time']
+		);
+
+		if ( $overlap > 0 ) {
+			$wpdb->query( 'ROLLBACK' );
+			return new \WP_Error(
+				'slot_taken',
+				__( 'This time slot was just taken. Please go back and choose another time.', 'wp-appointments' ),
+				[ 'status' => 409 ]
+			);
+		}
+
 		$booking_id = $this->booking_model->create( $data );
 
 		if ( ! $booking_id ) {
+			$wpdb->query( 'ROLLBACK' );
 			return new \WP_Error(
 				'booking_failed',
 				__( 'Could not save your booking. Please try again.', 'wp-appointments' ),
 				[ 'status' => 500 ]
 			);
 		}
+
+		$wpdb->query( 'COMMIT' );
 
 		// --- 7. Notify -------------------------------------------------------
 		// Email service (Step 6) hooks into this action.

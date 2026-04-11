@@ -235,6 +235,37 @@ class WPAPPT_Model_Booking {
 		);
 	}
 
+	/**
+	 * Same as count_overlapping() but appends FOR UPDATE to lock matching rows
+	 * for the duration of the calling transaction, preventing concurrent inserts
+	 * for the same slot.
+	 *
+	 * Must be called inside an active InnoDB transaction.
+	 */
+	public function count_overlapping_for_update(
+		string $date,
+		string $start_time,
+		string $end_time,
+		int $exclude_id = 0
+	): int {
+		return (int) $this->db->get_var(
+			$this->db->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT COUNT(*) FROM {$this->table}
+				  WHERE appointment_date = %s
+				    AND status != 'cancelled'
+				    AND id != %d
+				    AND start_time < %s
+				    AND end_time   > %s
+				  FOR UPDATE",
+				$date,
+				$exclude_id,
+				$end_time,
+				$start_time
+			)
+		);
+	}
+
 	// =========================================================================
 	// Write
 	// =========================================================================

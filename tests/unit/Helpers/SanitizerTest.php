@@ -16,9 +16,11 @@ class SanitizerTest extends WpTestCase {
 
 		// Make WP sanitisation functions behave as pass-throughs so tests
 		// focus on the sanitizer's own logic (type casts, key selection, etc.).
+		// wp_kses_post is intentionally NOT stubbed here so that individual
+		// tests can register their own expect() before any fallback when(),
+		// which is required for Mockery's FIFO queue to match correctly.
 		Functions\when( 'sanitize_text_field' )->returnArg();
 		Functions\when( 'sanitize_email' )->returnArg();
-		Functions\when( 'wp_kses_post' )->returnArg();
 		Functions\when( 'sanitize_textarea_field' )->returnArg();
 	}
 
@@ -104,6 +106,7 @@ class SanitizerTest extends WpTestCase {
 
 	/** @test */
 	public function booking_input_casts_service_id_to_int(): void {
+		Functions\when( 'wp_kses_post' )->returnArg();
 		$result = WPAPPT_Helper_Sanitizer::booking_input( [ 'service_id' => '3abc' ] );
 
 		$this->assertSame( 3, $result['service_id'] );
@@ -111,6 +114,7 @@ class SanitizerTest extends WpTestCase {
 
 	/** @test */
 	public function booking_input_returns_all_expected_keys(): void {
+		Functions\when( 'wp_kses_post' )->returnArg();
 		$result = WPAPPT_Helper_Sanitizer::booking_input( [] );
 
 		$expected_keys = [
@@ -126,13 +130,17 @@ class SanitizerTest extends WpTestCase {
 
 	/** @test */
 	public function booking_input_uses_wp_kses_post_for_injury_notes(): void {
+		// Two expects — Brain Monkey does not allow when() after expect() for the
+		// same function. Mockery matches in FIFO order: the specific-arg expect
+		// wins for injury_notes, the second expect catches the 'comments' call.
 		Functions\expect( 'wp_kses_post' )
 			->once()
 			->with( '<script>bad</script>notes' )
 			->andReturn( 'notes' );
-
-		// Suppress other wp_kses_post calls from the 'comments' field.
-		Functions\when( 'wp_kses_post' )->returnArg();
+		Functions\expect( 'wp_kses_post' )
+			->once()
+			->with( '' ) // comments field defaults to ''
+			->andReturnFirstArg();
 
 		$result = WPAPPT_Helper_Sanitizer::booking_input( [ 'injury_notes' => '<script>bad</script>notes' ] );
 

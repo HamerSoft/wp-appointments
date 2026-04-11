@@ -37,7 +37,7 @@ Planned improvements beyond the initial build. Each item includes implementation
 
 ---
 
-## 4. Double-booking protection
+## ~~4. Double-booking protection~~ ✓ Done
 
 **What:** Re-check slot availability inside a DB transaction at the moment the booking row is inserted, so two simultaneous submissions cannot claim the same slot.
 

@@ -13,7 +13,8 @@
     "autoload-dev": {
         "psr-4": {
             "WpAppointments\\Tests\\": "tests/"
-        }
+        },
+        "classmap": ["tests/"]
     },
     "scripts": {
         "test": "phpunit",

@@ -67,8 +67,7 @@ class EmailServiceTest extends WpTestCase {
 		Functions\when( '__' )->returnArg();
 		Functions\when( 'error_log' )->justReturn( null );
 		Functions\when( 'nl2br' )->returnArg();
-		Functions\when( 'sprintf' )->alias( 'sprintf' );
-		Functions\when( 'printf' )->alias( 'printf' );
+		Functions\when( 'esc_html_e' )->justReturn( null );
 	}
 
 	// =========================================================================
@@ -209,7 +208,9 @@ class EmailServiceTest extends WpTestCase {
 		$this->assertStringNotContainsString( "\r\n", $from_header,
 			'Newlines must be stripped from sender name to prevent email header injection'
 		);
-		$this->assertStringNotContainsString( 'Bcc:', $from_header );
+		$this->assertStringNotContainsString( "\r\nBcc:", $from_header,
+			'Injected Bcc header must not appear as a separate header line'
+		);
 	}
 
 	// =========================================================================
@@ -224,8 +225,9 @@ class EmailServiceTest extends WpTestCase {
 				return $hook === 'wpappt_booking_created';
 			} );
 
-		// Silence other add_action calls.
-		Functions\when( 'add_action' )->justReturn( true );
+		// Catch-all for the other add_action calls in init().
+		// Must be a second expect (not when) because Brain Monkey forbids when() after expect().
+		Functions\expect( 'add_action' )->zeroOrMoreTimes()->andReturn( true );
 
 		$this->makeService()->init();
 	}
@@ -238,7 +240,7 @@ class EmailServiceTest extends WpTestCase {
 				return $hook === 'wpappt_booking_status_changed';
 			} );
 
-		Functions\when( 'add_action' )->justReturn( true );
+		Functions\expect( 'add_action' )->zeroOrMoreTimes()->andReturn( true );
 
 		$this->makeService()->init();
 	}
@@ -251,7 +253,7 @@ class EmailServiceTest extends WpTestCase {
 				return $hook === 'wpappt_booking_confirmed';
 			} );
 
-		Functions\when( 'add_action' )->justReturn( true );
+		Functions\expect( 'add_action' )->zeroOrMoreTimes()->andReturn( true );
 
 		$this->makeService()->init();
 	}
@@ -264,7 +266,7 @@ class EmailServiceTest extends WpTestCase {
 				return $hook === 'wpappt_booking_rescheduled';
 			} );
 
-		Functions\when( 'add_action' )->justReturn( true );
+		Functions\expect( 'add_action' )->zeroOrMoreTimes()->andReturn( true );
 
 		$this->makeService()->init();
 	}

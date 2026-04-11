@@ -57,6 +57,21 @@ class BookingControllerTest extends WpTestCase {
 		Functions\when( '__' )->returnArg();
 	}
 
+	protected function tearDown(): void {
+		unset( $GLOBALS['wpdb'] );
+		parent::tearDown();
+	}
+
+	/**
+	 * Install a wpdb mock in the global scope and return it.
+	 * The controller uses `global $wpdb` for transaction queries.
+	 */
+	private function mockWpdb(): \Mockery\MockInterface {
+		$wpdb            = \Mockery::mock( 'wpdb' );
+		$GLOBALS['wpdb'] = $wpdb;
+		return $wpdb;
+	}
+
 	// =========================================================================
 	// Rate limiting
 	// =========================================================================
@@ -168,6 +183,37 @@ class BookingControllerTest extends WpTestCase {
 		$this->assertSame( 409, $result->get_error_data()['status'] );
 	}
 
+	/** @test */
+	public function it_returns_409_when_slot_is_taken_between_pre_check_and_insert(): void {
+		Functions\when( 'get_transient' )->justReturn( false );
+		Functions\when( 'set_transient' )->justReturn( true );
+
+		$wpdb = $this->mockWpdb();
+		$wpdb->shouldReceive( 'query' )->with( 'START TRANSACTION' )->once();
+		$wpdb->shouldReceive( 'query' )->with( 'ROLLBACK' )->once();
+
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+		$service_model->shouldReceive( 'find' )->andReturn( [
+			'id' => 1, 'duration_mins' => 60, 'is_active' => 1,
+		] );
+
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$booking_model->shouldReceive( 'count_overlapping_for_update' )->andReturn( 1 );
+		$booking_model->shouldNotReceive( 'create' );
+
+		$availability = \Mockery::mock( WPAPPT_Service_Availability::class );
+		$availability->shouldReceive( 'get_available_slots' )->andReturn( [
+			[ 'start_time' => '10:00', 'end_time' => '11:00' ],
+		] );
+
+		$result = $this->makeController( $service_model, $booking_model, $availability )
+		               ->process_create( $this->validParams() );
+
+		$this->assertInstanceOf( \WP_Error::class, $result );
+		$this->assertSame( 'slot_taken', $result->get_error_code() );
+		$this->assertSame( 409, $result->get_error_data()['status'] );
+	}
+
 	// =========================================================================
 	// Happy path
 	// =========================================================================
@@ -178,12 +224,17 @@ class BookingControllerTest extends WpTestCase {
 		Functions\when( 'set_transient' )->justReturn( true );
 		Functions\when( 'do_action' )->justReturn( null );
 
+		$wpdb = $this->mockWpdb();
+		$wpdb->shouldReceive( 'query' )->with( 'START TRANSACTION' )->once();
+		$wpdb->shouldReceive( 'query' )->with( 'COMMIT' )->once();
+
 		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
 		$service_model->shouldReceive( 'find' )->andReturn( [
 			'id' => 1, 'name' => 'Swedish', 'duration_mins' => 60, 'is_active' => 1,
 		] );
 
 		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$booking_model->shouldReceive( 'count_overlapping_for_update' )->andReturn( 0 );
 		$booking_model->shouldReceive( 'create' )->andReturn( 42 );
 
 		$availability = \Mockery::mock( WPAPPT_Service_Availability::class );
@@ -203,12 +254,17 @@ class BookingControllerTest extends WpTestCase {
 		Functions\when( 'get_transient' )->justReturn( false );
 		Functions\when( 'set_transient' )->justReturn( true );
 
+		$wpdb = $this->mockWpdb();
+		$wpdb->shouldReceive( 'query' )->with( 'START TRANSACTION' )->once();
+		$wpdb->shouldReceive( 'query' )->with( 'COMMIT' )->once();
+
 		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
 		$service_model->shouldReceive( 'find' )->andReturn( [
 			'id' => 1, 'duration_mins' => 60, 'is_active' => 1,
 		] );
 
 		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$booking_model->shouldReceive( 'count_overlapping_for_update' )->andReturn( 0 );
 		$booking_model->shouldReceive( 'create' )->andReturn( 7 );
 
 		$availability = \Mockery::mock( WPAPPT_Service_Availability::class );
@@ -231,12 +287,17 @@ class BookingControllerTest extends WpTestCase {
 		Functions\when( 'get_transient' )->justReturn( false );
 		Functions\when( 'set_transient' )->justReturn( true );
 
+		$wpdb = $this->mockWpdb();
+		$wpdb->shouldReceive( 'query' )->with( 'START TRANSACTION' )->once();
+		$wpdb->shouldReceive( 'query' )->with( 'ROLLBACK' )->once();
+
 		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
 		$service_model->shouldReceive( 'find' )->andReturn( [
 			'id' => 1, 'duration_mins' => 60, 'is_active' => 1,
 		] );
 
 		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$booking_model->shouldReceive( 'count_overlapping_for_update' )->andReturn( 0 );
 		$booking_model->shouldReceive( 'create' )->andReturn( false );
 
 		$availability = \Mockery::mock( WPAPPT_Service_Availability::class );
@@ -258,6 +319,10 @@ class BookingControllerTest extends WpTestCase {
 		Functions\when( 'set_transient' )->justReturn( true );
 		Functions\when( 'do_action' )->justReturn( null );
 
+		$wpdb = $this->mockWpdb();
+		$wpdb->shouldReceive( 'query' )->with( 'START TRANSACTION' )->once();
+		$wpdb->shouldReceive( 'query' )->with( 'COMMIT' )->once();
+
 		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
 		$service_model->shouldReceive( 'find' )->andReturn( [
 			'id' => 1, 'duration_mins' => 90, 'is_active' => 1,
@@ -265,6 +330,7 @@ class BookingControllerTest extends WpTestCase {
 
 		$captured_data = null;
 		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$booking_model->shouldReceive( 'count_overlapping_for_update' )->andReturn( 0 );
 		$booking_model->shouldReceive( 'create' )
 		              ->withArgs( function ( array $data ) use ( &$captured_data ): bool {
 			              $captured_data = $data;
