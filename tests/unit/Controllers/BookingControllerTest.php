@@ -51,7 +51,7 @@ class BookingControllerTest extends WpTestCase {
 		// Default Brain Monkey stubs for WP functions used in every path.
 		Functions\when( 'sanitize_text_field' )->returnArg();
 		Functions\when( 'sanitize_email' )->returnArg();
-		Functions\when( 'wp_kses_post' )->returnArg();
+		Functions\when( 'sanitize_textarea_field' )->returnArg();
 		Functions\when( 'is_email' )->justReturn( true );
 		Functions\when( 'sanitize_key' )->returnArg();
 		Functions\when( '__' )->returnArg();

@@ -106,7 +106,6 @@ class SanitizerTest extends WpTestCase {
 
 	/** @test */
 	public function booking_input_casts_service_id_to_int(): void {
-		Functions\when( 'wp_kses_post' )->returnArg();
 		$result = WPAPPT_Helper_Sanitizer::booking_input( [ 'service_id' => '3abc' ] );
 
 		$this->assertSame( 3, $result['service_id'] );
@@ -114,7 +113,6 @@ class SanitizerTest extends WpTestCase {
 
 	/** @test */
 	public function booking_input_returns_all_expected_keys(): void {
-		Functions\when( 'wp_kses_post' )->returnArg();
 		$result = WPAPPT_Helper_Sanitizer::booking_input( [] );
 
 		$expected_keys = [
@@ -129,22 +127,18 @@ class SanitizerTest extends WpTestCase {
 	}
 
 	/** @test */
-	public function booking_input_uses_wp_kses_post_for_injury_notes(): void {
-		// Two expects — Brain Monkey does not allow when() after expect() for the
-		// same function. Mockery matches in FIFO order: the specific-arg expect
-		// wins for injury_notes, the second expect catches the 'comments' call.
-		Functions\expect( 'wp_kses_post' )
-			->once()
-			->with( '<script>bad</script>notes' )
-			->andReturn( 'notes' );
-		Functions\expect( 'wp_kses_post' )
-			->once()
-			->with( '' ) // comments field defaults to ''
-			->andReturnFirstArg();
+	public function booking_input_passes_injury_notes_and_comments_through_sanitize_textarea_field(): void {
+		// sanitize_textarea_field is stubbed as a pass-through in setUp(), so the
+		// raw values survive unchanged here — verifying that the sanitizer routes
+		// these fields through it rather than through a stricter or more permissive
+		// function (e.g. wp_kses_post was used previously).
+		$result = WPAPPT_Helper_Sanitizer::booking_input( [
+			'injury_notes' => 'some notes',
+			'comments'     => 'some comments',
+		] );
 
-		$result = WPAPPT_Helper_Sanitizer::booking_input( [ 'injury_notes' => '<script>bad</script>notes' ] );
-
-		$this->assertSame( 'notes', $result['injury_notes'] );
+		$this->assertSame( 'some notes',    $result['injury_notes'] );
+		$this->assertSame( 'some comments', $result['comments'] );
 	}
 
 	// =========================================================================

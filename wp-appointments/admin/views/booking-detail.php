@@ -100,13 +100,13 @@ $can_cancel    = ( 'cancelled' !== $status );
 				<?php if ( ! empty( $booking['injury_notes'] ) ) : ?>
 				<tr>
 					<th><?php esc_html_e( 'Injury notes', 'wp-appointments' ); ?></th>
-					<td><?php echo wp_kses_post( $booking['injury_notes'] ); ?></td>
+					<td><?php echo nl2br( esc_html( $booking['injury_notes'] ) ); ?></td>
 				</tr>
 				<?php endif; ?>
 				<?php if ( ! empty( $booking['comments'] ) ) : ?>
 				<tr>
 					<th><?php esc_html_e( 'Comments', 'wp-appointments' ); ?></th>
-					<td><?php echo wp_kses_post( $booking['comments'] ); ?></td>
+					<td><?php echo nl2br( esc_html( $booking['comments'] ) ); ?></td>
 				</tr>
 				<?php endif; ?>
 			</table>

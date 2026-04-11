@@ -26,8 +26,8 @@ class WPAPPT_Helper_Sanitizer {
 			'customer_name'    => sanitize_text_field( $raw['customer_name']    ?? '' ),
 			'customer_email'   => sanitize_email( $raw['customer_email']        ?? '' ),
 			'customer_phone'   => sanitize_text_field( $raw['customer_phone']   ?? '' ),
-			'injury_notes'     => wp_kses_post( $raw['injury_notes']            ?? '' ),
-			'comments'         => wp_kses_post( $raw['comments']                ?? '' ),
+			'injury_notes'     => sanitize_textarea_field( $raw['injury_notes'] ?? '' ),
+			'comments'         => sanitize_textarea_field( $raw['comments']     ?? '' ),
 		];
 	}
 

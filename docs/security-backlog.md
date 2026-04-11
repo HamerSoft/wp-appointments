@@ -33,7 +33,7 @@ Fixes identified in the 2026-04-11 security audit (`docs/security-audit.md`).
 
 ---
 
-## 2. HTML permitted in customer-submitted fields
+## ~~2. HTML permitted in customer-submitted fields~~ ✓ Done
 
 **Severity:** Low
 

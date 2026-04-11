@@ -70,8 +70,8 @@ class WPAPPT_Rest_Api {
 				'customer_name'    => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
 				'customer_email'   => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_email' ],
 				'customer_phone'   => [ 'required' => true,  'type' => 'string',  'sanitize_callback' => 'sanitize_text_field' ],
-				'injury_notes'     => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'wp_kses_post', 'default' => '' ],
-				'comments'         => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'wp_kses_post', 'default' => '' ],
+				'injury_notes'     => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ],
+				'comments'         => [ 'required' => false, 'type' => 'string',  'sanitize_callback' => 'sanitize_textarea_field', 'default' => '' ],
 			],
 		] );
 
