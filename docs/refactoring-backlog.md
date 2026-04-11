@@ -4,7 +4,7 @@ Code quality improvements that do not add new features. Identified after the sec
 
 ---
 
-## 1. Admin notice strings not translated
+## ~~1. Admin notice strings not translated~~ ✓ Done
 
 **What:** Every message string in `WPAPPT_Admin::display_notices()` (`admin/class-admin.php:131–143`) is a hardcoded English literal with no `__()` wrapper. The rest of the plugin uses `__()` consistently throughout.
 

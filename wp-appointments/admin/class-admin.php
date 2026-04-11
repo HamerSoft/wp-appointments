@@ -128,19 +128,19 @@ class WPAPPT_Admin {
 		}
 
 		$messages = [
-			'booking_confirmed'    => [ 'success', 'Booking confirmed.' ],
-			'booking_cancelled'    => [ 'success', 'Booking cancelled.' ],
-			'booking_notes_saved'  => [ 'success', 'Notes saved.' ],
-			'followup_sent'        => [ 'success', 'Follow-up email sent.' ],
-			'service_saved'        => [ 'success', 'Service saved.' ],
-			'service_deleted'      => [ 'success', 'Service deleted.' ],
-			'availability_saved'   => [ 'success', 'Availability saved.' ],
-			'blocked_slot_added'   => [ 'success', 'Blocked slot added.' ],
-			'blocked_slot_deleted' => [ 'success', 'Blocked slot removed.' ],
-			'error_nonce'          => [ 'error',   'Security check failed. Please try again.' ],
-			'error_not_found'      => [ 'error',   'Record not found.' ],
-			'error_invalid'        => [ 'error',   'Invalid request.' ],
-			'error_save'           => [ 'error',   'Could not save. Please try again.' ],
+			'booking_confirmed'    => [ 'success', __( 'Booking confirmed.',                  'wp-appointments' ) ],
+			'booking_cancelled'    => [ 'success', __( 'Booking cancelled.',                  'wp-appointments' ) ],
+			'booking_notes_saved'  => [ 'success', __( 'Notes saved.',                        'wp-appointments' ) ],
+			'followup_sent'        => [ 'success', __( 'Follow-up email sent.',               'wp-appointments' ) ],
+			'service_saved'        => [ 'success', __( 'Service saved.',                      'wp-appointments' ) ],
+			'service_deleted'      => [ 'success', __( 'Service deleted.',                    'wp-appointments' ) ],
+			'availability_saved'   => [ 'success', __( 'Availability saved.',                 'wp-appointments' ) ],
+			'blocked_slot_added'   => [ 'success', __( 'Blocked slot added.',                 'wp-appointments' ) ],
+			'blocked_slot_deleted' => [ 'success', __( 'Blocked slot removed.',               'wp-appointments' ) ],
+			'error_nonce'          => [ 'error',   __( 'Security check failed. Please try again.', 'wp-appointments' ) ],
+			'error_not_found'      => [ 'error',   __( 'Record not found.',                   'wp-appointments' ) ],
+			'error_invalid'        => [ 'error',   __( 'Invalid request.',                    'wp-appointments' ) ],
+			'error_save'           => [ 'error',   __( 'Could not save. Please try again.',   'wp-appointments' ) ],
 		];
 
 		if ( ! isset( $messages[ $notice ] ) ) {
