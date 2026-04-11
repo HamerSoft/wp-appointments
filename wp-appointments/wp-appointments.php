@@ -23,6 +23,11 @@ define( 'WPAPPT_PLUGIN_FILE', __FILE__ );
 defined( 'WPAPPT_RATE_LIMIT'  ) || define( 'WPAPPT_RATE_LIMIT',  5 );
 defined( 'WPAPPT_RATE_WINDOW' ) || define( 'WPAPPT_RATE_WINDOW', 10 * MINUTE_IN_SECONDS );
 
+// Set to true in wp-config.php when the site runs behind a trusted reverse
+// proxy or load balancer. Enables X-Forwarded-For parsing for rate limiting.
+// Leave unset (default) when REMOTE_ADDR is the real client IP.
+defined( 'WPAPPT_TRUST_PROXY' ) || define( 'WPAPPT_TRUST_PROXY', false );
+
 // Bootstrap the autoloader — must be required manually before it can self-load.
 require_once WPAPPT_PLUGIN_DIR . 'includes/class-autoloader.php';
 WPAPPT_Autoloader::register();

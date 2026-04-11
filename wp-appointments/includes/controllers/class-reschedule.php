@@ -232,23 +232,7 @@ class WPAPPT_Controller_Reschedule {
 		];
 	}
 
-	/**
-	 * Determine the client IP for rate limiting.
-	 *
-	 * Checks X-Forwarded-For first (proxy/load-balancer environments) and
-	 * falls back to REMOTE_ADDR. Used only for rate-limiting, not for any
-	 * security-critical purpose.
-	 */
 	public function get_client_ip(): string {
-		$forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-
-		if ( $forwarded ) {
-			$ip = trim( explode( ',', $forwarded )[0] );
-			if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
-				return $ip;
-			}
-		}
-
-		return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+		return WPAPPT_Helper_Rate_Limiter::get_client_ip();
 	}
 }

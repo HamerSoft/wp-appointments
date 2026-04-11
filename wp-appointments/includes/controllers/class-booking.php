@@ -239,24 +239,7 @@ class WPAPPT_Controller_Booking {
 			->format( 'H:i:s' );
 	}
 
-	/**
-	 * Resolve the client IP from server vars.
-	 *
-	 * We check X-Forwarded-For first (common behind a proxy/CDN) but fall
-	 * back to REMOTE_ADDR. This is used only for rate-limiting (bot deterrence),
-	 * not for any security-critical purpose.
-	 */
 	public function get_client_ip(): string {
-		$forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
-
-		if ( $forwarded ) {
-			// Proxy chains are comma-separated; the leftmost is the client.
-			$ip = trim( explode( ',', $forwarded )[0] );
-			if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
-				return $ip;
-			}
-		}
-
-		return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+		return WPAPPT_Helper_Rate_Limiter::get_client_ip();
 	}
 }

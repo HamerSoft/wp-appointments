@@ -4,7 +4,7 @@ Fixes identified in the 2026-04-11 security audit (`docs/security-audit.md`).
 
 ---
 
-## 1. Rate limit bypass via X-Forwarded-For spoofing
+## ~~1. Rate limit bypass via X-Forwarded-For spoofing~~ ✓ Done
 
 **Severity:** Medium
 

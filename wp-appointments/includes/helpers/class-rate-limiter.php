@@ -15,6 +15,31 @@ if ( ! defined( 'ABSPATH' ) ) {
 class WPAPPT_Helper_Rate_Limiter {
 
 	/**
+	 * Resolve the client IP address for rate-limiting purposes.
+	 *
+	 * Trusts X-Forwarded-For only when WPAPPT_TRUST_PROXY is explicitly set to
+	 * true in wp-config.php — i.e. the site operator knows the server sits behind
+	 * a reverse proxy or load balancer that sets this header reliably.
+	 *
+	 * When WPAPPT_TRUST_PROXY is false (the default), X-Forwarded-For is ignored
+	 * entirely so an attacker cannot spoof their IP by setting the header
+	 * themselves, bypassing rate limits.
+	 */
+	public static function get_client_ip(): string {
+		if ( defined( 'WPAPPT_TRUST_PROXY' ) && WPAPPT_TRUST_PROXY ) {
+			$forwarded = $_SERVER['HTTP_X_FORWARDED_FOR'] ?? '';
+			if ( $forwarded ) {
+				$ip = trim( explode( ',', $forwarded )[0] );
+				if ( filter_var( $ip, FILTER_VALIDATE_IP ) ) {
+					return $ip;
+				}
+			}
+		}
+
+		return $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+	}
+
+	/**
 	 * Check whether the given IP is within the allowed limit for an action.
 	 *
 	 * Returns true  → request is allowed (counter incremented).
