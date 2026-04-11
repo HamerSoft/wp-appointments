@@ -22,7 +22,7 @@ Code quality improvements that do not add new features. Identified after the sec
 
 ---
 
-## 2. REST API endpoint handlers create dependencies inline
+## ~~2. REST API endpoint handlers create dependencies inline~~ ✓ Done
 
 **What:** `WPAPPT_Rest_Api::get_services()` instantiates `new WPAPPT_Model_Service()` directly inside the method body, and `get_availability()` does the same with `new WPAPPT_Service_Availability()`. The booking and reschedule endpoints avoid this by delegating to injected controllers (`WPAPPT_Controller_Booking`, `WPAPPT_Controller_Reschedule`), making them testable. These two endpoints are not, and have no unit tests as a result.
 

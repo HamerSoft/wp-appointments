@@ -17,6 +17,17 @@ class WPAPPT_Rest_Api {
 
 	const NAMESPACE = 'wpappt/v1';
 
+	private WPAPPT_Model_Service        $service_model;
+	private WPAPPT_Service_Availability $availability_service;
+
+	public function __construct(
+		?WPAPPT_Model_Service        $service_model        = null,
+		?WPAPPT_Service_Availability $availability_service = null
+	) {
+		$this->service_model        = $service_model        ?? new WPAPPT_Model_Service();
+		$this->availability_service = $availability_service ?? new WPAPPT_Service_Availability();
+	}
+
 	public function register_routes(): void {
 		$booking_controller = new WPAPPT_Controller_Booking();
 
@@ -120,8 +131,6 @@ class WPAPPT_Rest_Api {
 	 * @return \WP_REST_Response
 	 */
 	public function get_services(): \WP_REST_Response {
-		$service_model = new WPAPPT_Model_Service();
-
 		$services = array_map(
 			static fn( array $s ): array => [
 				'id'            => (int) $s['id'],
@@ -129,7 +138,7 @@ class WPAPPT_Rest_Api {
 				'duration_mins' => (int) $s['duration_mins'],
 				'price'         => (float) $s['price'],
 			],
-			$service_model->find_all_active()
+			$this->service_model->find_all_active()
 		);
 
 		return new \WP_REST_Response( $services, 200 );
@@ -145,7 +154,7 @@ class WPAPPT_Rest_Api {
 		$service_id = (int) $request->get_param( 'service_id' );
 		$date       = (string) $request->get_param( 'date' );
 
-		$slots = ( new WPAPPT_Service_Availability() )->get_available_slots( $date, $service_id );
+		$slots = $this->availability_service->get_available_slots( $date, $service_id );
 
 		return new \WP_REST_Response( $slots, 200 );
 	}
