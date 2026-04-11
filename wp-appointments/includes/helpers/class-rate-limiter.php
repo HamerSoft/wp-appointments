@@ -23,13 +23,13 @@ class WPAPPT_Helper_Rate_Limiter {
 	 * @param string $action         Short identifier, e.g. 'booking', 'reschedule'.
 	 * @param string $ip             Client IP address.
 	 * @param int    $max            Max allowed requests per window.
-	 * @param int    $window_seconds Window length in seconds (default 1 hour).
+	 * @param int    $window_seconds Window length in seconds (default 10 minutes).
 	 */
 	public static function check(
 		string $action,
 		string $ip,
 		int $max            = 5,
-		int $window_seconds = 3600
+		int $window_seconds = 600
 	): bool {
 		$key  = 'wpappt_rl_' . sanitize_key( $action ) . '_' . substr( md5( $ip ), 0, 12 );
 		$data = get_transient( $key );

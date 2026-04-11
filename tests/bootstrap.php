@@ -41,9 +41,16 @@ require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 // WordPress constants
 // ---------------------------------------------------------------------------
 
+if ( ! defined( 'MINUTE_IN_SECONDS' ) ) {
+	define( 'MINUTE_IN_SECONDS', 60 );
+}
 if ( ! defined( 'HOUR_IN_SECONDS' ) ) {
 	define( 'HOUR_IN_SECONDS', 3600 );
 }
+
+// Plugin rate-limiting constants (normally set in wp-appointments.php)
+defined( 'WPAPPT_RATE_LIMIT'  ) || define( 'WPAPPT_RATE_LIMIT',  5 );
+defined( 'WPAPPT_RATE_WINDOW' ) || define( 'WPAPPT_RATE_WINDOW', 10 * MINUTE_IN_SECONDS );
 
 // ---------------------------------------------------------------------------
 // WordPress class stubs

@@ -58,7 +58,7 @@ class WPAPPT_Controller_Booking {
 	 */
 	public function process_create( array $params ) {
 		// --- 1. Rate limit ---------------------------------------------------
-		if ( ! WPAPPT_Helper_Rate_Limiter::check( 'booking', $this->get_client_ip(), 5 ) ) {
+		if ( ! WPAPPT_Helper_Rate_Limiter::check( 'booking', $this->get_client_ip(), WPAPPT_RATE_LIMIT, WPAPPT_RATE_WINDOW ) ) {
 			return new \WP_Error(
 				'rate_limited',
 				__( 'Too many booking attempts. Please wait before trying again.', 'wp-appointments' ),

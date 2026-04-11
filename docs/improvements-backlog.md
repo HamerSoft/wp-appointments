@@ -79,7 +79,7 @@ Planned improvements beyond the initial build. Each item includes implementation
 
 ---
 
-## 6. Rate limiting on the booking endpoint
+## ~~6. Rate limiting on the booking endpoint~~ ✓ Done
 
 **What:** Limit how many booking submissions can be made from a single IP address within a time window.
 
