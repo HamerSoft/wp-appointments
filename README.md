@@ -37,6 +37,7 @@ Every significant event sends an email automatically:
 | Booking confirmed | Customer (with reschedule link) |
 | Booking cancelled | Customer |
 | Customer reschedules | Customer (with new reschedule link) + Admin |
+| Appointment reminder | Customer (N days before, configurable) |
 | Admin sends follow-up | Customer |
 
 ---
@@ -136,7 +137,9 @@ wp-appointments/               ← plugin root (copy this into wp-content/plugin
 │   ├── services/
 │   │   ├── class-availability.php  ← slot calculation engine
 │   │   ├── class-email.php         ← all transactional email dispatch
-│   │   └── class-token.php         ← reschedule token generation + validation
+│   │   ├── class-token.php         ← reschedule token generation + validation
+│   │   ├── class-reminder.php      ← daily cron handler for appointment reminders
+│   │   └── class-token-cleanup.php ← weekly cron handler to expire stale tokens
 │   │
 │   └── helpers/
 │       ├── class-sanitizer.php     ← input sanitisation helpers
@@ -160,6 +163,10 @@ wp-appointments/               ← plugin root (copy this into wp-content/plugin
 │       ├── admin.js             ← admin panel scripts
 │       └── booking-widget.js    ← self-contained IIFE booking widget
 │
+├── languages/
+│   ├── wp-appointments-nl_NL.po  ← Dutch translation source
+│   └── wp-appointments-nl_NL.mo  ← compiled Dutch translation
+│
 └── templates/emails/
     ├── base.php                      ← shared HTML email shell
     ├── booking-received-customer.php
@@ -168,6 +175,7 @@ wp-appointments/               ← plugin root (copy this into wp-content/plugin
     ├── booking-cancelled.php
     ├── reschedule-customer.php
     ├── reschedule-admin.php
+    ├── reminder-customer.php
     └── followup.php
 ```
 
@@ -175,11 +183,14 @@ wp-appointments/               ← plugin root (copy this into wp-content/plugin
 
 ```
 docs/
-├── feature-spec.md          ← full feature requirements
-├── technical-architecture.md← architecture decisions
-├── technical-reference.md   ← comprehensive technical documentation
-├── embedding-the-widget.md  ← how to embed the widget (Divi + shortcode)
-└── build-plan.md            ← original step-by-step build order
+├── technical-reference.md    ← comprehensive technical documentation
+├── embedding-the-widget.md   ← how to embed the widget (Divi + shortcode)
+├── smtp-configuration.md     ← SMTP setup examples for common providers
+├── local-development.md      ← local dev setup
+├── security-audit.md         ← security review and findings
+├── feature-spec.md           ← original feature requirements
+├── technical-architecture.md ← architecture decisions and rationale
+└── build-plan.md             ← original step-by-step build order
 
 tests/
 └── unit/                    ← PHPUnit test suite (Brain Monkey + Mockery)
@@ -230,13 +241,15 @@ The rule: strip `WPAPPT_`, lowercase, replace underscores with dashes. The first
 
 Base URL: `/wp-json/wpappt/v1/`
 
-| Method | Endpoint | Description |
-|---|---|---|
-| GET | `/services` | List active services |
-| GET | `/availability?service_id=&date=` | Available slots for a date + service |
-| POST | `/bookings` | Submit a new booking (nonce required) |
-| GET | `/reschedule?token=` | Validate a reschedule token |
-| POST | `/reschedule` | Apply a reschedule (nonce required) |
+| Method | Endpoint | Description | Auth |
+|---|---|---|---|
+| GET | `/services` | List active services | None |
+| GET | `/availability?service_id=&date=` | Available slots for a date + service | None |
+| POST | `/bookings` | Submit a new booking | Rate-limited; nonce sent by the widget |
+| GET | `/reschedule?token=` | Validate a reschedule token | Token |
+| POST | `/reschedule` | Apply a reschedule | Token; rate-limited |
+
+The booking widget automatically includes a WordPress nonce (`X-WP-Nonce` header) with every POST request. Rate limiting (5 requests per 10 minutes per IP) is enforced server-side on the booking endpoint, and 10 per hour on the reschedule endpoints.
 
 See [`docs/technical-reference.md`](docs/technical-reference.md) for full request/response shapes and error codes.
 
@@ -258,6 +271,23 @@ add_action( 'wpappt_booking_status_changed', function ( int $booking_id, string 
 
 Full hook reference: [`docs/technical-reference.md § Action hooks`](docs/technical-reference.md#11-action-hooks-reference).
 
+### PHP constants
+
+Advanced behaviour can be overridden by defining constants in `wp-config.php` before the plugin loads:
+
+| Constant | Default | Description |
+|---|---|---|
+| `WPAPPT_RATE_LIMIT` | `5` | Maximum booking submissions per window per IP |
+| `WPAPPT_RATE_WINDOW` | `600` | Rate-limit window in seconds (default: 10 minutes) |
+| `WPAPPT_TRUST_PROXY` | `false` | Set to `true` if the site sits behind a trusted reverse proxy/load balancer. When enabled, the `X-Forwarded-For` header is used to resolve the real client IP for rate limiting. **Leave `false` unless you control the proxy** — enabling it on a direct server allows clients to spoof their IP and bypass the rate limiter. |
+
+```php
+// wp-config.php
+define( 'WPAPPT_TRUST_PROXY', true );  // only if behind a trusted reverse proxy
+```
+
+---
+
 ### Widget colour theming
 
 The booking widget uses CSS custom properties. Override them in **Divi → Theme Options → Custom CSS** or **Appearance → Customize → Additional CSS**:
@@ -278,5 +308,8 @@ The booking widget uses CSS custom properties. Override them in **Divi → Theme
 |---|---|
 | [`docs/technical-reference.md`](docs/technical-reference.md) | DB schema, REST API, email system, token security, rate limiting, hooks |
 | [`docs/embedding-the-widget.md`](docs/embedding-the-widget.md) | How to embed via Divi or shortcode, colour customisation |
+| [`docs/smtp-configuration.md`](docs/smtp-configuration.md) | SMTP setup examples (Gmail, Mailgun, SendGrid, etc.) |
+| [`docs/local-development.md`](docs/local-development.md) | Local dev environment setup |
+| [`docs/security-audit.md`](docs/security-audit.md) | Security review: findings, mitigations, and recommendations |
 | [`docs/feature-spec.md`](docs/feature-spec.md) | Original feature requirements |
 | [`docs/technical-architecture.md`](docs/technical-architecture.md) | Architecture decisions and rationale |
