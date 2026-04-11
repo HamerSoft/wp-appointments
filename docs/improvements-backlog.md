@@ -59,7 +59,7 @@ Planned improvements beyond the initial build. Each item includes implementation
 
 ---
 
-## 5. Token expiry cleanup (WP-Cron)
+## ~~5. Token expiry cleanup (WP-Cron)~~ ✓ Done
 
 **What:** A weekly cron job that nulls out expired reschedule tokens from the bookings table.
 

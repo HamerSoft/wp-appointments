@@ -244,6 +244,9 @@ class WPAPPT_Plugin {
 		// Reminder cron handler.
 		( new WPAPPT_Service_Reminder() )->init();
 
+		// Token expiry cleanup cron handler.
+		( new WPAPPT_Service_Token_Cleanup() )->init();
+
 		// REST API routes.
 		add_action( 'rest_api_init', [ new WPAPPT_Rest_Api(), 'register_routes' ] );
 

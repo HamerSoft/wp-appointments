@@ -164,5 +164,9 @@ class WPAPPT_Activator {
 			}
 			wp_schedule_event( $start, 'daily', 'wpappt_send_reminders' );
 		}
+
+		if ( ! wp_next_scheduled( 'wpappt_expire_tokens' ) ) {
+			wp_schedule_event( time(), 'weekly', 'wpappt_expire_tokens' );
+		}
 	}
 }
