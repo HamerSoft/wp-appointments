@@ -1,6 +1,24 @@
 /* WP Appointments — Admin Styles */
 
 /* -------------------------------------------------------------------------- */
+/* Admin menu icon                                                             */
+/* -------------------------------------------------------------------------- */
+
+#adminmenu #toplevel_page_wpappt-bookings .wp-menu-image img {
+	width: 100%;
+	height: 100%;
+	padding: 0;
+	filter: brightness(0) invert(1);
+	opacity: 0.6;
+}
+
+#adminmenu #toplevel_page_wpappt-bookings:hover .wp-menu-image img,
+#adminmenu #toplevel_page_wpappt-bookings.wp-has-current-submenu .wp-menu-image img,
+#adminmenu #toplevel_page_wpappt-bookings.current .wp-menu-image img {
+	opacity: 0.8;
+}
+
+/* -------------------------------------------------------------------------- */
 /* Status badges                                                               */
 /* -------------------------------------------------------------------------- */
 

@@ -22,9 +22,10 @@ class WPAPPT_Admin {
 	}
 
 	public function init(): void {
-		add_action( 'admin_menu',            [ $this, 'register_menus'   ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets'   ] );
-		add_action( 'admin_notices',         [ $this, 'display_notices'  ] );
+		add_action( 'admin_menu',            [ $this, 'register_menus'        ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets'        ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_menu_icon_fix' ] );
+		add_action( 'admin_notices',         [ $this, 'display_notices'       ] );
 	}
 
 	// -------------------------------------------------------------------------
@@ -38,7 +39,7 @@ class WPAPPT_Admin {
 			'manage_options',
 			'wpappt-bookings',
 			[ $this, 'render_bookings_page' ],
-			'dashicons-calendar-alt',
+			WPAPPT_PLUGIN_URL . 'assets/images/wp-logo.png',
 			30
 		);
 
@@ -83,6 +84,16 @@ class WPAPPT_Admin {
 	// -------------------------------------------------------------------------
 	// Assets
 	// -------------------------------------------------------------------------
+
+	public function enqueue_menu_icon_fix(): void {
+		wp_add_inline_style(
+			'wp-admin',
+			'#adminmenu #toplevel_page_wpappt-bookings .wp-menu-image img { width: 100%; height: 100%; padding: 0; filter: brightness(0) invert(1); opacity: 0.6; }
+#adminmenu #toplevel_page_wpappt-bookings:hover .wp-menu-image img,
+#adminmenu #toplevel_page_wpappt-bookings.wp-has-current-submenu .wp-menu-image img,
+#adminmenu #toplevel_page_wpappt-bookings.current .wp-menu-image img { opacity: 0.8; }'
+		);
+	}
 
 	public function enqueue_assets( string $hook ): void {
 		$plugin_hooks = [

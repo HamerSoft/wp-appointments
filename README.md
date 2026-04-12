@@ -159,9 +159,11 @@ wp-appointments/               ← plugin root (copy this into wp-content/plugin
 │   ├── css/
 │   │   ├── admin.css            ← admin panel styles
 │   │   └── booking-widget.css   ← frontend widget styles
-│   └── js/
-│       ├── admin.js             ← admin panel scripts
-│       └── booking-widget.js    ← self-contained IIFE booking widget
+│   ├── js/
+│   │   ├── admin.js             ← admin panel scripts
+│   │   └── booking-widget.js    ← self-contained IIFE booking widget
+│   └── images/
+│       └── wp-logo.png          ← plugin logo (used as admin menu icon)
 │
 ├── languages/
 │   ├── wp-appointments-nl_NL.po  ← Dutch translation source
