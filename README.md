@@ -65,7 +65,7 @@ The plugin folder to copy is the inner `wp-appointments/` directory (the one con
 
 ### 2. Activate the plugin
 
-Go to **Plugins** in wp-admin and activate **WP Appointments**. Activation creates the five database tables automatically.
+Go to **Plugins** in wp-admin and activate **WP Appointments**. Activation creates the four database tables automatically.
 
 ### 3. Configure settings
 
@@ -104,7 +104,7 @@ Add `[wpappt_booking]` to any page using a Code module (Divi) or Shortcode block
 
 > The widget has a max-width of 640 px and centres itself. A single-column Divi row with no sidebar works best.
 
-See [`docs/embedding-the-widget.md`](docs/embedding-the-widget.md) for full details including colour customisation.
+See [`docs/embedding-the-widget.md`](docs/embedding-the-widget.md) for full details including colour customisation, or [`docs/smtp-configuration.md`](docs/smtp-configuration.md) for SMTP setup.
 
 ---
 
@@ -185,14 +185,9 @@ wp-appointments/               ← plugin root (copy this into wp-content/plugin
 
 ```
 docs/
-├── technical-reference.md    ← comprehensive technical documentation
 ├── embedding-the-widget.md   ← how to embed the widget (Divi + shortcode)
 ├── smtp-configuration.md     ← SMTP setup examples for common providers
-├── local-development.md      ← local dev setup
-├── security-audit.md         ← security review and findings
-├── feature-spec.md           ← original feature requirements
-├── technical-architecture.md ← architecture decisions and rationale
-└── build-plan.md             ← original step-by-step build order
+└── local-development.md      ← local dev setup
 
 tests/
 └── unit/                    ← PHPUnit test suite (Brain Monkey + Mockery)
@@ -253,7 +248,6 @@ Base URL: `/wp-json/wpappt/v1/`
 
 The booking widget automatically includes a WordPress nonce (`X-WP-Nonce` header) with every POST request. Rate limiting (5 requests per 10 minutes per IP) is enforced server-side on the booking endpoint, and 10 per hour on the reschedule endpoints.
 
-See [`docs/technical-reference.md`](docs/technical-reference.md) for full request/response shapes and error codes.
 
 ### Extending via action hooks
 
@@ -271,7 +265,6 @@ add_action( 'wpappt_booking_status_changed', function ( int $booking_id, string 
 }, 10, 2 );
 ```
 
-Full hook reference: [`docs/technical-reference.md § Action hooks`](docs/technical-reference.md#11-action-hooks-reference).
 
 ### PHP constants
 
@@ -308,10 +301,6 @@ The booking widget uses CSS custom properties. Override them in **Divi → Theme
 
 | Document | Contents |
 |---|---|
-| [`docs/technical-reference.md`](docs/technical-reference.md) | DB schema, REST API, email system, token security, rate limiting, hooks |
 | [`docs/embedding-the-widget.md`](docs/embedding-the-widget.md) | How to embed via Divi or shortcode, colour customisation |
 | [`docs/smtp-configuration.md`](docs/smtp-configuration.md) | SMTP setup examples (Gmail, Mailgun, SendGrid, etc.) |
 | [`docs/local-development.md`](docs/local-development.md) | Local dev environment setup |
-| [`docs/security-audit.md`](docs/security-audit.md) | Security review: findings, mitigations, and recommendations |
-| [`docs/feature-spec.md`](docs/feature-spec.md) | Original feature requirements |
-| [`docs/technical-architecture.md`](docs/technical-architecture.md) | Architecture decisions and rationale |

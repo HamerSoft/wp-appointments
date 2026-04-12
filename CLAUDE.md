@@ -3,9 +3,9 @@
 A custom WordPress booking plugin for a solo massage therapist, replacing the youcanbookme third-party service.
 
 ## Docs
-- `docs/feature-spec.md` — full feature requirements
-- `docs/technical-architecture.md` — architecture decisions, DB schema, folder structure
-- `docs/build-plan.md` — step-by-step build order with milestones
+- `docs/embedding-the-widget.md` — widget embedding (Divi + shortcode) and colour customisation
+- `docs/smtp-configuration.md` — SMTP setup examples
+- `docs/local-development.md` — local dev environment setup
 
 ## Stack
 - **Platform:** WordPress plugin
