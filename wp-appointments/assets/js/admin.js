@@ -15,7 +15,7 @@
 	} );
 
 	/* ---------------------------------------------------------------------- */
-	/* Availability — enable/disable time inputs when checkbox toggled        */
+	/* Availability — enable/disable time selects when checkbox toggled       */
 	/* ---------------------------------------------------------------------- */
 
 	document.addEventListener( 'change', function ( e ) {
@@ -24,14 +24,37 @@
 		}
 
 		var row     = e.target.closest( '.wpappt-avail-row' );
-		var inputs  = row.querySelectorAll( '.wpappt-time-input' );
+		var selects = row.querySelectorAll( '.wpappt-time-sel' );
 		var enabled = e.target.checked;
 
 		row.classList.toggle( 'wpappt-avail-row--disabled', ! enabled );
 
-		inputs.forEach( function ( input ) {
-			input.disabled = ! enabled;
+		selects.forEach( function ( sel ) {
+			sel.disabled = ! enabled;
 		} );
+	} );
+
+	/* ---------------------------------------------------------------------- */
+	/* 24-hour time pickers — sync selects → hidden input                     */
+	/* ---------------------------------------------------------------------- */
+
+	document.addEventListener( 'change', function ( e ) {
+		if ( ! e.target.classList.contains( 'wpappt-time-sel' ) ) {
+			return;
+		}
+
+		var picker = e.target.closest( '.wpappt-time-picker' );
+		if ( ! picker ) {
+			return;
+		}
+
+		var hourSel = picker.querySelector( '[data-time-part="hour"]' );
+		var minSel  = picker.querySelector( '[data-time-part="minute"]' );
+		var hidden  = picker.querySelector( '.wpappt-time-value' );
+
+		if ( hourSel && minSel && hidden ) {
+			hidden.value = hourSel.value + ':' + minSel.value;
+		}
 	} );
 
 	/* ---------------------------------------------------------------------- */

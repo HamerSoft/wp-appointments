@@ -11,6 +11,57 @@ if ( ! defined( 'ABSPATH' ) ) {
  *   @var array<int, array<string, mixed>> $blocked_slots Upcoming blocked slots from DB.
  */
 
+/**
+ * Renders a 24-hour time picker (two <select> elements + hidden input).
+ *
+ * The hidden input carries the actual form value so backend sanitisation is
+ * unchanged.  The selects drive the display only and are synced to the hidden
+ * input via admin.js.
+ *
+ * @param string $name     Name attribute for the hidden input.
+ * @param string $value    Current time in HH:MM or HH:MM:SS format.
+ * @param string $classes  Extra CSS classes applied to both selects.
+ * @param bool   $disabled Whether the selects start disabled.
+ */
+function wpappt_time_picker( string $name, string $value, string $classes = '', bool $disabled = false ): void {
+	$parts   = explode( ':', substr( $value, 0, 5 ) );
+	$hour    = max( 0, min( 23, (int) ( $parts[0] ?? 0 ) ) );
+	$minute  = max( 0, min( 59, (int) ( $parts[1] ?? 0 ) ) );
+	// Snap displayed minute to nearest 5-minute step.
+	$min_disp    = (int) round( $minute / 5 ) * 5;
+	if ( $min_disp >= 60 ) {
+		$min_disp = 55;
+	}
+	$dis    = $disabled ? ' disabled' : '';
+	$cls    = trim( 'wpappt-time-input wpappt-time-sel ' . $classes );
+	$hidden = sprintf( '%02d:%02d', $hour, $minute );
+	?>
+	<span class="wpappt-time-picker">
+		<select class="<?php echo esc_attr( $cls ); ?>"
+		        data-time-part="hour"<?php echo $dis; ?>>
+			<?php for ( $h = 0; $h <= 23; $h++ ) :
+				$hh = sprintf( '%02d', $h );
+			?>
+			<option value="<?php echo $hh; ?>"<?php selected( $h, $hour ); ?>><?php echo $hh; ?></option>
+			<?php endfor; ?>
+		</select>
+		<span class="wpappt-time-sep">:</span>
+		<select class="<?php echo esc_attr( $cls ); ?>"
+		        data-time-part="minute"<?php echo $dis; ?>>
+			<?php for ( $m = 0; $m <= 55; $m += 5 ) :
+				$mm = sprintf( '%02d', $m );
+			?>
+			<option value="<?php echo $mm; ?>"<?php selected( $m, $min_disp ); ?>><?php echo $mm; ?></option>
+			<?php endfor; ?>
+		</select>
+		<input type="hidden"
+		       name="<?php echo esc_attr( $name ); ?>"
+		       value="<?php echo esc_attr( $hidden ); ?>"
+		       class="wpappt-time-value">
+	</span>
+	<?php
+}
+
 $day_names = [
 	0 => __( 'Sunday',    'wp-appointments' ),
 	1 => __( 'Monday',    'wp-appointments' ),
@@ -72,18 +123,20 @@ foreach ( $availability as $row ) {
 					</td>
 					<td><strong><?php echo esc_html( $day_names[ $day ] ); ?></strong></td>
 					<td>
-						<input type="time"
-							   name="availability[<?php echo $day; ?>][start_time]"
-							   value="<?php echo esc_attr( substr( $start, 0, 5 ) ); ?>"
-							   class="wpappt-time-input"
-							   <?php echo $checked ? '' : 'disabled'; ?>>
+						<?php wpappt_time_picker(
+							"availability[{$day}][start_time]",
+							$start,
+							'',
+							! $checked
+						); ?>
 					</td>
 					<td>
-						<input type="time"
-							   name="availability[<?php echo $day; ?>][end_time]"
-							   value="<?php echo esc_attr( substr( $end, 0, 5 ) ); ?>"
-							   class="wpappt-time-input"
-							   <?php echo $checked ? '' : 'disabled'; ?>>
+						<?php wpappt_time_picker(
+							"availability[{$day}][end_time]",
+							$end,
+							'',
+							! $checked
+						); ?>
 					</td>
 				</tr>
 				<?php endfor; ?>
@@ -154,13 +207,13 @@ foreach ( $availability as $row ) {
 			<tr>
 				<th><label for="wpappt-block-start"><?php esc_html_e( 'Start Time', 'wp-appointments' ); ?></label></th>
 				<td>
-					<input type="time" id="wpappt-block-start" name="start_time" required>
+					<?php wpappt_time_picker( 'start_time', '09:00' ); ?>
 				</td>
 			</tr>
 			<tr>
-				<th><label for="wpappt-block-end"><?php esc_html_e( 'End Time', 'wp-appointments' ); ?></label></th>
+				<th><label><?php esc_html_e( 'End Time', 'wp-appointments' ); ?></label></th>
 				<td>
-					<input type="time" id="wpappt-block-end" name="end_time" required>
+					<?php wpappt_time_picker( 'end_time', '10:00' ); ?>
 				</td>
 			</tr>
 			<tr>
