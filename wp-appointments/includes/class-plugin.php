@@ -40,10 +40,24 @@ class WPAPPT_Plugin {
 		$phpmailer->Port       = $port;
 		$phpmailer->SMTPSecure = $enc;
 
+		// Fail fast instead of hanging the request for minutes when the SMTP
+		// host is unreachable (e.g. outbound port blocked).
+		$phpmailer->Timeout = 15;
+
 		if ( '' !== $username && '' !== $password ) {
 			$phpmailer->SMTPAuth = true;
 			$phpmailer->Username = $username;
 			$phpmailer->Password = $password;
+		}
+
+		// Diagnostic: set define( 'WPAPPT_SMTP_DEBUG', true ) in wp-config.php to
+		// log the full SMTP conversation (connect, STARTTLS, auth) to debug.log.
+		if ( defined( 'WPAPPT_SMTP_DEBUG' ) && WPAPPT_SMTP_DEBUG ) {
+			$phpmailer->SMTPDebug   = 2; // client + server messages.
+			$phpmailer->Debugoutput = static function ( string $str, int $level ): void {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( 'WPAPPT SMTP: ' . trim( $str ) );
+			};
 		}
 	}
 
@@ -252,6 +266,14 @@ class WPAPPT_Plugin {
 
 		// SMTP configuration.
 		add_action( 'phpmailer_init', [ $this, 'configure_smtp' ] );
+
+		// Diagnostic: log the reason wp_mail() failed instead of failing silently.
+		add_action( 'wp_mail_failed', static function ( $error ): void {
+			if ( $error instanceof \WP_Error ) {
+				// phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+				error_log( 'WPAPPT mail failed: ' . $error->get_error_message() );
+			}
+		} );
 
 		// Frontend booking widget assets.
 		add_action( 'wp_enqueue_scripts', [ $this, 'enqueue_widget_assets' ] );

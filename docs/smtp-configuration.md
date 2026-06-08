@@ -1,8 +1,26 @@
 # SMTP Configuration
 
-The plugin sends transactional emails via WordPress's `wp_mail`. By default WordPress uses the server's PHP `mail()` function, which is often blocked or lands in spam. Configuring SMTP routes all outgoing mail through your own domain email instead.
+The plugin sends transactional emails via WordPress's `wp_mail`. By default WordPress uses the server's PHP `mail()` function. Depending on your host this is either perfectly fine (see below) or blocked/spam-prone, in which case configuring SMTP routes outgoing mail through your own domain email instead.
 
-## How it works
+## Do you even need SMTP? (start here)
+
+**If your website and your domain mailbox are hosted with the same provider, you probably don't need SMTP at all.**
+
+In that setup the server's built-in PHP `mail()` already hands mail to the provider's local mail system, which trusts mail from its own hosting account. There's no external connection to make, so **no host, no port, no encryption, and — importantly — no username or password are required.** It's the simplest and fastest path, and it avoids storing a mailbox password anywhere.
+
+To use it: **leave the SMTP Host field blank** in **Appointments → Settings → Outgoing Email (SMTP)** (and remove any `WPAPPT_SMTP_*` constants from `wp-config.php`). With no host configured, the plugin leaves WordPress on its default `mail()` path.
+
+> Note on settings precedence: host/port/encryption resolve as Environment variable → `wp-config.php` constant → Settings page. Clearing the constants is **not** enough on its own — if the Settings-page host is still filled in, it keeps driving the SMTP path. Clear the host in **both** places to fall back to `mail()`.
+
+The only thing that still matters is the **`From` address** — keep it on your real domain (e.g. `noreply@yourdomain.com`) so the provider's SPF record vouches for the mail and it isn't flagged as spam. That's a sender *identity*, not a login.
+
+> **Worked example — Hostnet:** the site and the `manawamassages.nl` mailbox both live on Hostnet. Outbound connections to the public `smtp.hostnet.nl:587` are firewalled (they time out), so SMTP fails. Leaving the SMTP Host blank to use native `mail()` works instantly and needs no credentials.
+
+### Are credentials still valuable?
+
+Yes — SMTP credentials are genuinely useful when you need to send through an *external* mail server (a different provider than your website host, or a dedicated transactional service). They authenticate your site to that server. **They simply aren't required when you rely on same-provider native `mail()` as above.** Configure them only if you actually use the SMTP path below.
+
+## How SMTP works (when you do use it)
 
 Use the email address that came with your domain registration (e.g. `bookings@yourdomain.com`) as the SMTP sender. Set up automatic forwarding on that mailbox to your personal inbox — you'll receive all booking notifications there without ever having to check the domain mailbox directly.
 
