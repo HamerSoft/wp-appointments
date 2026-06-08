@@ -79,6 +79,38 @@ class WPAPPT_Helper_Sanitizer {
 	}
 
 	/**
+	 * Sanitise recurrence fields from the add-blocked-slot form.
+	 *
+	 * @param array<string, mixed> $raw
+	 * @return array<string, mixed>
+	 */
+	public static function recurrence_input( array $raw ): array {
+		$type = sanitize_text_field( $raw['recurrence_type'] ?? 'none' );
+		if ( ! in_array( $type, [ 'none', 'daily', 'weekly', 'monthly' ], true ) ) {
+			$type = 'none';
+		}
+
+		$interval = max( 1, (int) ( $raw['daily_interval'] ?? 1 ) );
+
+		$weekly_days = [];
+		if ( isset( $raw['weekly_days'] ) && is_array( $raw['weekly_days'] ) ) {
+			foreach ( $raw['weekly_days'] as $day ) {
+				$d = (int) $day;
+				if ( $d >= 0 && $d <= 6 ) {
+					$weekly_days[] = $d;
+				}
+			}
+		}
+
+		return [
+			'recurrence_type'     => $type,
+			'daily_interval'      => $interval,
+			'weekly_days'         => $weekly_days,
+			'recurrence_end_date' => sanitize_text_field( $raw['recurrence_end_date'] ?? '' ),
+		];
+	}
+
+	/**
 	 * Sanitise the follow-up email message (admin, plain text only).
 	 */
 	public static function followup_message( string $raw ): string {

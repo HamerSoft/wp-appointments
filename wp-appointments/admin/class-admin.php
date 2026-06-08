@@ -148,6 +148,7 @@ class WPAPPT_Admin {
 			'availability_saved'   => [ 'success', __( 'Availability saved.',                 'wp-appointments' ) ],
 			'blocked_slot_added'   => [ 'success', __( 'Blocked slot added.',                 'wp-appointments' ) ],
 			'blocked_slot_deleted' => [ 'success', __( 'Blocked slot removed.',               'wp-appointments' ) ],
+			'blocked_series_deleted' => [ 'success', __( 'Blocked series removed.',             'wp-appointments' ) ],
 			'error_nonce'          => [ 'error',   __( 'Security check failed. Please try again.', 'wp-appointments' ) ],
 			'error_not_found'      => [ 'error',   __( 'Record not found.',                   'wp-appointments' ) ],
 			'error_invalid'        => [ 'error',   __( 'Invalid request.',                    'wp-appointments' ) ],

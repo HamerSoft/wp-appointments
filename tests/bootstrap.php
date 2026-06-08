@@ -145,6 +145,10 @@ if ( ! class_exists( 'wpdb' ) ) {
 			return false;
 		}
 
+		public function query( string $query ): int|bool {
+			return false;
+		}
+
 		/** Mirrors WordPress behaviour: escapes % and _ for use in LIKE. */
 		public function esc_like( string $text ): string {
 			return addcslashes( $text, '_%\\' );

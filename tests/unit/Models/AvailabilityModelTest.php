@@ -129,4 +129,74 @@ class AvailabilityModelTest extends WpTestCase {
 
 		$this->assertFalse( $this->makeModel( $db )->delete_blocked_slot( 999 ) );
 	}
+
+	// =========================================================================
+	// add_blocked_slots_batch
+	// =========================================================================
+
+	/** @test */
+	public function add_blocked_slots_batch_returns_false_for_empty_input(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'insert' )->never();
+
+		$this->assertFalse( $this->makeModel( $db )->add_blocked_slots_batch( [] ) );
+	}
+
+	/** @test */
+	public function add_blocked_slots_batch_returns_false_when_insert_fails(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'insert' )->once()->andReturn( false );
+
+		$this->assertFalse(
+			$this->makeModel( $db )->add_blocked_slots_batch( [
+				[ 'blocked_date' => '2026-07-01', 'start_time' => '09:00', 'end_time' => '10:00', 'reason' => null ],
+			] )
+		);
+	}
+
+	/** @test */
+	public function add_blocked_slots_batch_inserts_all_rows_and_returns_first_id(): void {
+		$db            = $this->mockDb();
+		$db->insert_id = 7;
+
+		$db->shouldReceive( 'insert' )->twice()->andReturn( 1 );
+
+		$db->shouldReceive( 'prepare' )
+		   ->once()
+		   ->andReturn( 'back-fill-sql' );
+
+		$db->shouldReceive( 'query' )->once()->with( 'back-fill-sql' );
+
+		$result = $this->makeModel( $db )->add_blocked_slots_batch( [
+			[ 'blocked_date' => '2026-07-01', 'start_time' => '09:00', 'end_time' => '10:00', 'reason' => null ],
+			[ 'blocked_date' => '2026-07-08', 'start_time' => '09:00', 'end_time' => '10:00', 'reason' => null ],
+		] );
+
+		$this->assertSame( 7, $result );
+	}
+
+	// =========================================================================
+	// delete_blocked_series
+	// =========================================================================
+
+	/** @test */
+	public function delete_blocked_series_returns_true_when_rows_deleted(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'delete' )
+		   ->once()
+		   ->withArgs( function ( string $table, array $where ): bool {
+			   return isset( $where['series_id'] ) && $where['series_id'] === 5;
+		   } )
+		   ->andReturn( 3 );
+
+		$this->assertTrue( $this->makeModel( $db )->delete_blocked_series( 5 ) );
+	}
+
+	/** @test */
+	public function delete_blocked_series_returns_false_when_no_rows_found(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'delete' )->once()->andReturn( 0 );
+
+		$this->assertFalse( $this->makeModel( $db )->delete_blocked_series( 999 ) );
+	}
 }

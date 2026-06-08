@@ -168,4 +168,83 @@ class SanitizerTest extends WpTestCase {
 
 		$this->assertSame( 'School run', $result['reason'] );
 	}
+
+	// =========================================================================
+	// recurrence_input
+	// =========================================================================
+
+	/** @test */
+	public function recurrence_input_returns_all_expected_keys(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [] );
+
+		$this->assertArrayHasKey( 'recurrence_type',     $result );
+		$this->assertArrayHasKey( 'daily_interval',      $result );
+		$this->assertArrayHasKey( 'weekly_days',         $result );
+		$this->assertArrayHasKey( 'recurrence_end_date', $result );
+	}
+
+	/** @test */
+	public function recurrence_input_defaults_to_none_type(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [] );
+
+		$this->assertSame( 'none', $result['recurrence_type'] );
+	}
+
+	/** @test */
+	public function recurrence_input_rejects_invalid_recurrence_type(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [ 'recurrence_type' => 'biannual' ] );
+
+		$this->assertSame( 'none', $result['recurrence_type'] );
+	}
+
+	/** @test */
+	public function recurrence_input_accepts_daily_type(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [ 'recurrence_type' => 'daily' ] );
+
+		$this->assertSame( 'daily', $result['recurrence_type'] );
+	}
+
+	/** @test */
+	public function recurrence_input_accepts_weekly_type(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [ 'recurrence_type' => 'weekly' ] );
+
+		$this->assertSame( 'weekly', $result['recurrence_type'] );
+	}
+
+	/** @test */
+	public function recurrence_input_accepts_monthly_type(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [ 'recurrence_type' => 'monthly' ] );
+
+		$this->assertSame( 'monthly', $result['recurrence_type'] );
+	}
+
+	/** @test */
+	public function recurrence_input_clamps_daily_interval_to_minimum_one(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [ 'daily_interval' => '0' ] );
+
+		$this->assertSame( 1, $result['daily_interval'] );
+	}
+
+	/** @test */
+	public function recurrence_input_casts_daily_interval_to_int(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [ 'daily_interval' => '3' ] );
+
+		$this->assertSame( 3, $result['daily_interval'] );
+	}
+
+	/** @test */
+	public function recurrence_input_filters_out_of_range_weekly_days(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [
+			'weekly_days' => [ '1', '3', '8', '-1' ],
+		] );
+
+		$this->assertSame( [ 1, 3 ], $result['weekly_days'] );
+	}
+
+	/** @test */
+	public function recurrence_input_returns_empty_weekly_days_when_not_set(): void {
+		$result = WPAPPT_Helper_Sanitizer::recurrence_input( [] );
+
+		$this->assertSame( [], $result['weekly_days'] );
+	}
 }

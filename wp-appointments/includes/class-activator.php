@@ -78,8 +78,10 @@ class WPAPPT_Activator {
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
   reason VARCHAR(120) NULL DEFAULT NULL,
+  series_id INT UNSIGNED NULL DEFAULT NULL,
   PRIMARY KEY  (id),
-  KEY blocked_date (blocked_date)
+  KEY blocked_date (blocked_date),
+  KEY series_id (series_id)
 ) {$charset};";
 
 		// ------------------------------------------------------------------

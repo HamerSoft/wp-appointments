@@ -36,6 +36,7 @@ class WPAPPT_Controller_Admin_Ajax {
 			'wpappt_save_availability',
 			'wpappt_add_blocked_slot',
 			'wpappt_delete_blocked_slot',
+			'wpappt_delete_blocked_series',
 		];
 
 		foreach ( $actions as $action ) {
@@ -191,9 +192,9 @@ class WPAPPT_Controller_Admin_Ajax {
 		check_admin_referer( 'wpappt_add_blocked_slot' );
 		$this->require_capability();
 
-		$data = WPAPPT_Helper_Sanitizer::blocked_slot_input( $_POST );
+		$data       = WPAPPT_Helper_Sanitizer::blocked_slot_input( $_POST );
+		$recurrence = WPAPPT_Helper_Sanitizer::recurrence_input( $_POST );
 
-		// Basic validation: date must be parseable and times must be ordered.
 		$date_ok  = (bool) \DateTime::createFromFormat( 'Y-m-d', $data['blocked_date'] );
 		$times_ok = '' !== $data['start_time']
 			&& '' !== $data['end_time']
@@ -203,9 +204,113 @@ class WPAPPT_Controller_Admin_Ajax {
 			$this->redirect( 'wpappt-availability', 'error_invalid' );
 		}
 
-		$result = $this->availability_model->add_blocked_slot( $data );
+		// Non-recurring — existing single-slot path.
+		if ( 'none' === $recurrence['recurrence_type'] ) {
+			$result = $this->availability_model->add_blocked_slot( $data );
+			$notice = ( false !== $result ) ? 'blocked_slot_added' : 'error_save';
+			$this->redirect( 'wpappt-availability', $notice );
+		}
+
+		// Recurring — validate end date.
+		$end_ok = '' !== $recurrence['recurrence_end_date']
+			&& (bool) \DateTime::createFromFormat( 'Y-m-d', $recurrence['recurrence_end_date'] )
+			&& $recurrence['recurrence_end_date'] > $data['blocked_date'];
+
+		if ( ! $end_ok ) {
+			$this->redirect( 'wpappt-availability', 'error_invalid' );
+		}
+
+		if ( 'weekly' === $recurrence['recurrence_type'] && empty( $recurrence['weekly_days'] ) ) {
+			$this->redirect( 'wpappt-availability', 'error_invalid' );
+		}
+
+		$slots = $this->expand_recurrence( $data, $recurrence );
+
+		if ( empty( $slots ) || count( $slots ) > 730 ) {
+			$this->redirect( 'wpappt-availability', 'error_invalid' );
+		}
+
+		$result = $this->availability_model->add_blocked_slots_batch( $slots );
 		$notice = ( false !== $result ) ? 'blocked_slot_added' : 'error_save';
 		$this->redirect( 'wpappt-availability', $notice );
+	}
+
+	/**
+	 * Expand a recurrence rule into an array of slot data arrays.
+	 *
+	 * @param array<string, mixed> $data       Sanitised single-slot data (blocked_date, start_time, end_time, reason).
+	 * @param array<string, mixed> $recurrence Sanitised recurrence fields (recurrence_type, daily_interval, weekly_days, recurrence_end_date).
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function expand_recurrence( array $data, array $recurrence ): array {
+		$slots = [];
+		$start = new \DateTime( $data['blocked_date'] );
+		$end   = new \DateTime( $recurrence['recurrence_end_date'] );
+
+		switch ( $recurrence['recurrence_type'] ) {
+
+			case 'daily':
+				$step    = max( 1, (int) $recurrence['daily_interval'] );
+				$current = clone $start;
+				while ( $current <= $end ) {
+					$slots[] = array_merge( $data, [ 'blocked_date' => $current->format( 'Y-m-d' ) ] );
+					if ( count( $slots ) > 730 ) {
+						break;
+					}
+					$current->modify( "+{$step} days" );
+				}
+				break;
+
+			case 'weekly':
+				$days    = $recurrence['weekly_days'];
+				$current = clone $start;
+				while ( $current <= $end ) {
+					if ( in_array( (int) $current->format( 'w' ), $days, true ) ) {
+						$slots[] = array_merge( $data, [ 'blocked_date' => $current->format( 'Y-m-d' ) ] );
+						if ( count( $slots ) > 730 ) {
+							break;
+						}
+					}
+					$current->modify( '+1 day' );
+				}
+				break;
+
+			case 'monthly':
+				$dom   = (int) $start->format( 'j' );
+				$year  = (int) $start->format( 'Y' );
+				$month = (int) $start->format( 'n' );
+
+				while ( true ) {
+					$days_in_month = (int) ( new \DateTime( sprintf( '%04d-%02d-01', $year, $month ) ) )->format( 't' );
+
+					if ( $dom <= $days_in_month ) {
+						$date = new \DateTime( sprintf( '%04d-%02d-%02d', $year, $month, $dom ) );
+						if ( $date > $end ) {
+							break;
+						}
+						if ( $date >= $start ) {
+							$slots[] = array_merge( $data, [ 'blocked_date' => $date->format( 'Y-m-d' ) ] );
+							if ( count( $slots ) > 730 ) {
+								break;
+							}
+						}
+					}
+
+					$month++;
+					if ( $month > 12 ) {
+						$month = 1;
+						$year++;
+					}
+
+					// Safety valve: stop if looping well past end date year.
+					if ( $year > (int) $end->format( 'Y' ) + 2 ) {
+						break;
+					}
+				}
+				break;
+		}
+
+		return $slots;
 	}
 
 	public function handle_delete_blocked_slot(): void {
@@ -215,6 +320,16 @@ class WPAPPT_Controller_Admin_Ajax {
 
 		$success = $this->availability_model->delete_blocked_slot( $id );
 		$notice  = $success ? 'blocked_slot_deleted' : 'error_not_found';
+		$this->redirect( 'wpappt-availability', $notice );
+	}
+
+	public function handle_delete_blocked_series(): void {
+		$series_id = (int) ( $_POST['series_id'] ?? 0 );
+		check_admin_referer( "wpappt_delete_blocked_series_{$series_id}" );
+		$this->require_capability();
+
+		$success = $this->availability_model->delete_blocked_series( $series_id );
+		$notice  = $success ? 'blocked_series_deleted' : 'error_not_found';
 		$this->redirect( 'wpappt-availability', $notice );
 	}
 

@@ -173,4 +173,78 @@ class WPAPPT_Model_Availability {
 
 		return false !== $result && $result > 0;
 	}
+
+	/**
+	 * Insert multiple blocked slots and link them with a shared series_id.
+	 *
+	 * All rows are inserted individually; series_id is back-filled in one UPDATE
+	 * using the first and last inserted IDs (safe because this is a single-admin
+	 * panel with no concurrent writers).
+	 *
+	 * Note: no DB transaction is used. A mid-batch failure leaves already-inserted
+	 * rows as individual slots (series_id = NULL). This is acceptable for a
+	 * single-admin tool where DB errors during inserts are extremely rare.
+	 *
+	 * @param array<int, array<string, mixed>> $slots
+	 * @return int|false ID of the first inserted row, or false on failure / empty input.
+	 */
+	public function add_blocked_slots_batch( array $slots ): int|false {
+		if ( empty( $slots ) ) {
+			return false;
+		}
+
+		$first_id = null;
+		$last_id  = null;
+
+		foreach ( $slots as $slot ) {
+			$result = $this->db->insert(
+				$this->blocked_table,
+				[
+					'blocked_date' => $slot['blocked_date'],
+					'start_time'   => $slot['start_time'],
+					'end_time'     => $slot['end_time'],
+					'reason'       => $slot['reason'] ?? null,
+				],
+				[ '%s', '%s', '%s', '%s' ]
+			);
+
+			if ( false === $result ) {
+				return false;
+			}
+
+			$id = (int) $this->db->insert_id;
+			if ( null === $first_id ) {
+				$first_id = $id;
+			}
+			$last_id = $id;
+		}
+
+		// Back-fill series_id for all inserted rows.
+		$this->db->query(
+			$this->db->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"UPDATE {$this->blocked_table} SET series_id = %d WHERE id BETWEEN %d AND %d",
+				$first_id,
+				$first_id,
+				$last_id
+			)
+		);
+
+		return $first_id;
+	}
+
+	/**
+	 * Delete all blocked slots belonging to a series.
+	 *
+	 * @return bool True if at least one row was deleted.
+	 */
+	public function delete_blocked_series( int $series_id ): bool {
+		$result = $this->db->delete(
+			$this->blocked_table,
+			[ 'series_id' => $series_id ],
+			[ '%d' ]
+		);
+
+		return false !== $result && $result > 0;
+	}
 }
