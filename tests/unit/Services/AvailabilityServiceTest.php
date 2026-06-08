@@ -325,4 +325,113 @@ class AvailabilityServiceTest extends WpTestCase {
 		$this->makeService( $service_model, $avail_model, $booking_model )
 		     ->get_available_slots( $date, 1 );
 	}
+
+	// =========================================================================
+	// get_available_dates_in_month
+	// =========================================================================
+
+	/** @test */
+	public function get_available_dates_in_month_returns_empty_for_inactive_service(): void {
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService( [ 'is_active' => 0 ] ) );
+
+		$result = $this->makeService( $service_model )
+		               ->get_available_dates_in_month( 2026, 6, 1 );
+
+		$this->assertSame( [], $result );
+	}
+
+	/** @test */
+	public function get_available_dates_in_month_excludes_days_of_week_with_no_template(): void {
+		// Weekly template has NO availability entries at all.
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+		$avail_model   = \Mockery::mock( WPAPPT_Model_Availability::class );
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+		$avail_model->shouldReceive( 'find_all' )->andReturn( [] );
+		$avail_model->shouldReceive( 'find_blocked_for_month' )->andReturn( [] );
+		$booking_model->shouldReceive( 'find_by_month' )->andReturn( [] );
+
+		$result = $this->makeService( $service_model, $avail_model, $booking_model )
+		               ->get_available_dates_in_month( 2026, 6, 1 );
+
+		$this->assertSame( [], $result );
+	}
+
+	/** @test */
+	public function get_available_dates_in_month_loads_obstacles_once_not_per_day(): void {
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+		$avail_model   = \Mockery::mock( WPAPPT_Model_Availability::class );
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+		$avail_model->shouldReceive( 'find_all' )->andReturn( [] );
+
+		// Must be called exactly once regardless of how many days are in the month.
+		$avail_model->shouldReceive( 'find_blocked_for_month' )->once()->andReturn( [] );
+		$booking_model->shouldReceive( 'find_by_month' )->once()->andReturn( [] );
+
+		$this->makeService( $service_model, $avail_model, $booking_model )
+		     ->get_available_dates_in_month( 2026, 6, 1 );
+	}
+
+	/** @test */
+	public function get_available_dates_in_month_returns_dates_that_have_slots(): void {
+		// Use a fixed future month far enough ahead that all days pass the "not past" check.
+		$year  = 2099;
+		$month = 1; // January — 31 days, starts on a Tuesday (day 2).
+
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+		$avail_model   = \Mockery::mock( WPAPPT_Model_Availability::class );
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService( [ 'duration_mins' => 60 ] ) );
+
+		// Only Monday (1) has availability.
+		$avail_model->shouldReceive( 'find_all' )->andReturn( [
+			[ 'day_of_week' => 1, 'start_time' => '09:00:00', 'end_time' => '10:00:00', 'is_available' => 1 ],
+		] );
+		$avail_model->shouldReceive( 'find_blocked_for_month' )->andReturn( [] );
+		$booking_model->shouldReceive( 'find_by_month' )->andReturn( [] );
+
+		$result = $this->makeService( $service_model, $avail_model, $booking_model )
+		               ->get_available_dates_in_month( $year, $month, 1 );
+
+		// Every result must be a Monday.
+		foreach ( $result as $date ) {
+			$dow = (int) ( new \DateTime( $date ) )->format( 'w' );
+			$this->assertSame( 1, $dow, "Expected only Mondays, got day-of-week $dow for $date" );
+		}
+
+		$this->assertNotEmpty( $result );
+	}
+
+	/** @test */
+	public function get_available_dates_in_month_excludes_fully_blocked_date(): void {
+		$year  = 2099;
+		$month = 1;
+
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+		$avail_model   = \Mockery::mock( WPAPPT_Model_Availability::class );
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService( [ 'duration_mins' => 60 ] ) );
+
+		// Monday availability: one 60-min window 09:00–10:00 (exactly one slot).
+		$avail_model->shouldReceive( 'find_all' )->andReturn( [
+			[ 'day_of_week' => 1, 'start_time' => '09:00:00', 'end_time' => '10:00:00', 'is_available' => 1 ],
+		] );
+
+		// 2099-01-07 is the first Monday of January 2099. Block its only slot entirely.
+		$avail_model->shouldReceive( 'find_blocked_for_month' )->andReturn( [
+			[ 'blocked_date' => '2099-01-07', 'start_time' => '09:00:00', 'end_time' => '10:00:00' ],
+		] );
+		$booking_model->shouldReceive( 'find_by_month' )->andReturn( [] );
+
+		$result = $this->makeService( $service_model, $avail_model, $booking_model )
+		               ->get_available_dates_in_month( $year, $month, 1 );
+
+		$this->assertNotContains( '2099-01-07', $result, '2099-01-07 should be excluded because its only slot is blocked' );
+	}
 }

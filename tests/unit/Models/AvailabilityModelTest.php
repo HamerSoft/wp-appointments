@@ -199,4 +199,33 @@ class AvailabilityModelTest extends WpTestCase {
 
 		$this->assertFalse( $this->makeModel( $db )->delete_blocked_series( 999 ) );
 	}
+
+	// =========================================================================
+	// find_blocked_for_month
+	// =========================================================================
+
+	/** @test */
+	public function find_blocked_for_month_queries_by_year_month_prefix(): void {
+		$db = $this->mockDb();
+
+		$db->shouldReceive( 'prepare' )
+		   ->once()
+		   ->withArgs( function ( string $sql, string $prefix ): bool {
+			   return str_contains( $sql, "blocked_date LIKE %s" ) && $prefix === '2026-06%';
+		   } )
+		   ->andReturn( 'sql' );
+
+		$db->shouldReceive( 'get_results' )->andReturn( [] );
+
+		$this->makeModel( $db )->find_blocked_for_month( '2026-06' );
+	}
+
+	/** @test */
+	public function find_blocked_for_month_returns_empty_array_when_no_rows(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'prepare' )->andReturn( 'sql' );
+		$db->shouldReceive( 'get_results' )->andReturn( [] );
+
+		$this->assertSame( [], $this->makeModel( $db )->find_blocked_for_month( '2026-06' ) );
+	}
 }

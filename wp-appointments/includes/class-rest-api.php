@@ -67,6 +67,36 @@ class WPAPPT_Rest_Api {
 		] );
 
 		// -----------------------------------------------------------------
+		// GET /wpappt/v1/availability/days
+		// -----------------------------------------------------------------
+		register_rest_route( self::NAMESPACE, '/availability/days', [
+			'methods'             => \WP_REST_Server::READABLE,
+			'callback'            => [ $this, 'get_availability_days' ],
+			'permission_callback' => '__return_true',
+			'args'                => [
+				'service_id' => [
+					'required'          => true,
+					'type'              => 'integer',
+					'minimum'           => 1,
+					'sanitize_callback' => 'absint',
+				],
+				'year'       => [
+					'required'          => true,
+					'type'              => 'integer',
+					'minimum'           => 2000,
+					'sanitize_callback' => 'absint',
+				],
+				'month'      => [
+					'required'          => true,
+					'type'              => 'integer',
+					'minimum'           => 1,
+					'maximum'           => 12,
+					'sanitize_callback' => 'absint',
+				],
+			],
+		] );
+
+		// -----------------------------------------------------------------
 		// POST /wpappt/v1/bookings
 		// Nonce (X-WP-Nonce) validated automatically by WP REST middleware.
 		// -----------------------------------------------------------------
@@ -162,5 +192,21 @@ class WPAPPT_Rest_Api {
 		$slots = $this->availability_service->get_available_slots( $date, $service_id );
 
 		return new \WP_REST_Response( $slots, 200 );
+	}
+
+	/**
+	 * GET /wpappt/v1/availability/days?service_id=&year=&month=
+	 *
+	 * @param  \WP_REST_Request $request
+	 * @return \WP_REST_Response
+	 */
+	public function get_availability_days( \WP_REST_Request $request ): \WP_REST_Response {
+		$service_id = (int) $request->get_param( 'service_id' );
+		$year       = (int) $request->get_param( 'year' );
+		$month      = (int) $request->get_param( 'month' );
+
+		$dates = $this->availability_service->get_available_dates_in_month( $year, $month, $service_id );
+
+		return new \WP_REST_Response( $dates, 200 );
 	}
 }

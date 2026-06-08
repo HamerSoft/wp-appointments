@@ -91,6 +91,83 @@ class WPAPPT_Service_Availability {
 		return $slots;
 	}
 
+	/**
+	 * Return date strings for all days in a month that have at least one slot.
+	 *
+	 * Uses 3 DB queries for the whole month (weekly template + blocked + booked)
+	 * instead of per-day queries.
+	 *
+	 * @return array<int, string> e.g. ['2026-06-09', '2026-06-10', ...]
+	 */
+	public function get_available_dates_in_month( int $year, int $month, int $service_id ): array {
+		$service = $this->service_model->find( $service_id );
+		if ( ! $service || ! $service['is_active'] ) {
+			return [];
+		}
+
+		$duration   = (int) $service['duration_mins'];
+		$year_month = sprintf( '%04d-%02d', $year, $month );
+		$today      = new \DateTime( 'today' );
+
+		// 3 bulk queries for the whole month.
+		$template = $this->availability_model->find_all();
+		$blocked  = $this->availability_model->find_blocked_for_month( $year_month );
+		$booked   = $this->booking_model->find_by_month( $year_month );
+
+		// Index weekly template by day_of_week for O(1) lookup per calendar day.
+		$windows_by_dow = [];
+		foreach ( $template as $row ) {
+			if ( (bool) $row['is_available'] ) {
+				$windows_by_dow[ (int) $row['day_of_week'] ][] = $row;
+			}
+		}
+
+		$days_in_month = (int) ( new \DateTime( "{$year_month}-01" ) )->format( 't' );
+		$available     = [];
+
+		for ( $d = 1; $d <= $days_in_month; $d++ ) {
+			$date_str = sprintf( '%04d-%02d-%02d', $year, $month, $d );
+			$cell_dt  = new \DateTime( $date_str );
+
+			if ( $cell_dt < $today ) {
+				continue;
+			}
+
+			$dow = (int) $cell_dt->format( 'w' );
+
+			if ( empty( $windows_by_dow[ $dow ] ) ) {
+				continue;
+			}
+
+			// Filter pre-loaded obstacles down to this specific date.
+			$day_blocked = array_filter(
+				$blocked,
+				fn( array $row ): bool => $row['blocked_date'] === $date_str
+			);
+			$day_booked = array_filter(
+				$booked,
+				fn( array $row ): bool => $row['appointment_date'] === $date_str
+			);
+
+			foreach ( $windows_by_dow[ $dow ] as $window ) {
+				$candidates = $this->generate_candidates(
+					substr( $window['start_time'], 0, 5 ),
+					substr( $window['end_time'],   0, 5 ),
+					$duration
+				);
+
+				foreach ( $candidates as $candidate ) {
+					if ( $this->is_slot_free( $candidate['start_time'], $candidate['end_time'], $day_blocked, $day_booked ) ) {
+						$available[] = $date_str;
+						continue 3; // Date has at least one slot — move to next day.
+					}
+				}
+			}
+		}
+
+		return $available;
+	}
+
 	// =========================================================================
 	// Private helpers
 	// =========================================================================

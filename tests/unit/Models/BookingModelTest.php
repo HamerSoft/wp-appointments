@@ -288,6 +288,39 @@ class BookingModelTest extends WpTestCase {
 	}
 
 	// =========================================================================
+	// find_by_month
+	// =========================================================================
+
+	/** @test */
+	public function find_by_month_queries_by_year_month_prefix_and_excludes_cancelled(): void {
+		$db          = $this->mockDb();
+		$capturedSql = '';
+
+		$db->shouldReceive( 'prepare' )
+		   ->withArgs( function ( string $sql, string $prefix ) use ( &$capturedSql ): bool {
+			   $capturedSql = $sql;
+			   return $prefix === '2026-06%';
+		   } )
+		   ->andReturn( 'sql' );
+
+		$db->shouldReceive( 'get_results' )->andReturn( [] );
+
+		$this->makeModel( $db )->find_by_month( '2026-06' );
+
+		$this->assertStringContainsString( "appointment_date LIKE %s", $capturedSql );
+		$this->assertStringContainsString( "status != 'cancelled'", $capturedSql );
+	}
+
+	/** @test */
+	public function find_by_month_returns_empty_array_when_no_bookings(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'prepare' )->andReturn( 'sql' );
+		$db->shouldReceive( 'get_results' )->andReturn( [] );
+
+		$this->assertSame( [], $this->makeModel( $db )->find_by_month( '2026-06' ) );
+	}
+
+	// =========================================================================
 	// count_overlapping
 	// =========================================================================
 

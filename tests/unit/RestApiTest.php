@@ -10,6 +10,7 @@ use WPAPPT_Service_Availability;
 /**
  * @covers WPAPPT_Rest_Api::get_services
  * @covers WPAPPT_Rest_Api::get_availability
+ * @covers WPAPPT_Rest_Api::get_availability_days
  */
 class RestApiTest extends WpTestCase {
 
@@ -115,6 +116,41 @@ class RestApiTest extends WpTestCase {
 
 		$request  = new \WP_REST_Request( [ 'service_id' => 1, 'date' => '2026-06-01' ] );
 		$response = ( new WPAPPT_Rest_Api( null, $availability_service ) )->get_availability( $request );
+
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( [], $response->get_data() );
+	}
+
+	// =========================================================================
+	// GET /availability/days
+	// =========================================================================
+
+	/** @test */
+	public function get_availability_days_returns_200_with_date_array_from_service(): void {
+		$dates = [ '2026-06-09', '2026-06-10', '2026-06-16' ];
+
+		$availability_service = \Mockery::mock( WPAPPT_Service_Availability::class );
+		$availability_service->shouldReceive( 'get_available_dates_in_month' )
+			->once()
+			->with( 2026, 6, 1 )
+			->andReturn( $dates );
+
+		$request = new \WP_REST_Request( [ 'service_id' => 1, 'year' => 2026, 'month' => 6 ] );
+
+		$response = ( new WPAPPT_Rest_Api( null, $availability_service ) )->get_availability_days( $request );
+
+		$this->assertInstanceOf( \WP_REST_Response::class, $response );
+		$this->assertSame( 200, $response->get_status() );
+		$this->assertSame( $dates, $response->get_data() );
+	}
+
+	/** @test */
+	public function get_availability_days_returns_empty_array_when_no_available_dates(): void {
+		$availability_service = \Mockery::mock( WPAPPT_Service_Availability::class );
+		$availability_service->shouldReceive( 'get_available_dates_in_month' )->andReturn( [] );
+
+		$request  = new \WP_REST_Request( [ 'service_id' => 1, 'year' => 2026, 'month' => 6 ] );
+		$response = ( new WPAPPT_Rest_Api( null, $availability_service ) )->get_availability_days( $request );
 
 		$this->assertSame( 200, $response->get_status() );
 		$this->assertSame( [], $response->get_data() );

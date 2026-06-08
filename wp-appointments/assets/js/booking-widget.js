@@ -12,14 +12,15 @@
 	 * State
 	 * ========================================================================= */
 	var state = {
-		step:     1,
-		services: [],
-		service:  null,   // { id, name, duration_mins, price }
-		date:     null,   // 'YYYY-MM-DD'
-		slot:     null,   // { start_time: 'H:i', end_time: 'H:i' }
-		slots:    [],
-		calYear:  0,
-		calMonth: 0,      // 0-indexed
+		step:          1,
+		services:      [],
+		service:       null,   // { id, name, duration_mins, price }
+		date:          null,   // 'YYYY-MM-DD'
+		slot:          null,   // { start_time: 'H:i', end_time: 'H:i' }
+		slots:         [],
+		availableDays: null,   // Set of 'YYYY-MM-DD' strings, null while loading
+		calYear:       0,
+		calMonth:      0,      // 0-indexed
 		form: {
 			name:         '',
 			email:        '',
@@ -94,6 +95,22 @@
 			} )
 			.catch( function () {
 				showError( 'step-3-content', s.errLoadSlots );
+			} );
+	}
+
+	function fetchAvailableDays() {
+		var year  = state.calYear;
+		var month = state.calMonth + 1; // calMonth is 0-indexed; API expects 1-indexed
+		state.availableDays = null;
+		showLoading( 'wpappt-calendar' );
+		apiFetch( 'availability/days?service_id=' + state.service.id + '&year=' + year + '&month=' + month )
+			.then( function ( dates ) {
+				state.availableDays = new Set( dates );
+				renderCalendar();
+			} )
+			.catch( function () {
+				var calEl = document.getElementById( 'wpappt-calendar' );
+				if ( calEl ) calEl.innerHTML = '<p class="wpappt-notice wpappt-notice--error">' + esc( s.errLoadSlots ) + '</p>';
 			} );
 	}
 
@@ -220,7 +237,7 @@
 				'<button class="wpappt-btn wpappt-btn--primary" id="step2-next"' + ( state.date ? '' : ' disabled' ) + '>' + esc( s.btnNext ) + '</button>' +
 			'</div>';
 
-		renderCalendar();
+		fetchAvailableDays();
 
 		document.getElementById( 'step2-back' ).addEventListener( 'click', function () {
 			setStep( 1 );
@@ -271,12 +288,16 @@
 		for ( var d = 1; d <= lastDay.getDate(); d++ ) {
 			var cellDate = new Date( year, month, d );
 			var dateStr  = formatDate( cellDate );
-			var isPast   = cellDate < today;
-			var isSel    = state.date === dateStr;
-			var cls      = 'wpappt-cal__cell' + ( isPast ? ' is-past' : ' is-available' ) + ( isSel ? ' is-selected' : '' );
+			var isPast      = cellDate < today;
+			var isAvailable = ! isPast && state.availableDays instanceof Set && state.availableDays.has( dateStr );
+			var isDisabled  = ! isPast && ! isAvailable;
+			var isSel       = state.date === dateStr;
+			var cls         = 'wpappt-cal__cell' +
+				( isPast || isDisabled ? ' is-past' : ' is-available' ) +
+				( isSel ? ' is-selected' : '' );
 			var ariaLabel = formatDisplayDate( dateStr ) + ( isSel ? s.ariaSelected : '' );
 			html += '<div class="' + cls + '"' +
-				( ! isPast ? ' data-date="' + dateStr + '" role="button" tabindex="0" aria-label="' + esc( ariaLabel ) + '"' : ' aria-hidden="true"' ) +
+				( isAvailable ? ' data-date="' + dateStr + '" role="button" tabindex="0" aria-label="' + esc( ariaLabel ) + '"' : ' aria-hidden="true"' ) +
 				'>' + d + '</div>';
 		}
 
@@ -286,12 +307,12 @@
 		document.getElementById( 'cal-prev' ).addEventListener( 'click', function () {
 			if ( isPrevDisabled ) return;
 			state.calMonth === 0 ? ( state.calYear--, state.calMonth = 11 ) : state.calMonth--;
-			renderCalendar();
+			fetchAvailableDays();
 		} );
 
 		document.getElementById( 'cal-next' ).addEventListener( 'click', function () {
 			state.calMonth === 11 ? ( state.calYear++, state.calMonth = 0 ) : state.calMonth++;
-			renderCalendar();
+			fetchAvailableDays();
 		} );
 
 		calEl.querySelectorAll( '.wpappt-cal__cell.is-available' ).forEach( function ( cell ) {

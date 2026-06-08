@@ -117,6 +117,27 @@ class WPAPPT_Model_Availability {
 	}
 
 	/**
+	 * Return all blocked slots for a given month.
+	 *
+	 * @param  string $year_month 'YYYY-MM'
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function find_blocked_for_month( string $year_month ): array {
+		$rows = $this->db->get_results(
+			$this->db->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT * FROM {$this->blocked_table}
+				  WHERE blocked_date LIKE %s
+				  ORDER BY blocked_date ASC, start_time ASC",
+				$year_month . '%'
+			),
+			ARRAY_A
+		);
+
+		return $rows ?: [];
+	}
+
+	/**
 	 * Return all blocked slots on or after today, for admin display.
 	 *
 	 * @return array<int, array<string, mixed>>

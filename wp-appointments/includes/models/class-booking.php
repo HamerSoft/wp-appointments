@@ -166,6 +166,27 @@ class WPAPPT_Model_Booking {
 	}
 
 	/**
+	 * Return non-cancelled bookings for a given month.
+	 *
+	 * @param  string $year_month 'YYYY-MM'
+	 * @return array<int, array<string, mixed>>
+	 */
+	public function find_by_month( string $year_month ): array {
+		$rows = $this->db->get_results(
+			$this->db->prepare(
+				// phpcs:ignore WordPress.DB.PreparedSQL.InterpolatedNotPrepared
+				"SELECT appointment_date, start_time, end_time FROM {$this->table}
+				  WHERE appointment_date LIKE %s
+				    AND status != 'cancelled'",
+				$year_month . '%'
+			),
+			ARRAY_A
+		);
+
+		return $rows ?: [];
+	}
+
+	/**
 	 * Return confirmed bookings whose appointment date is exactly $days_ahead
 	 * days from today and for which a reminder has not yet been sent.
 	 *
