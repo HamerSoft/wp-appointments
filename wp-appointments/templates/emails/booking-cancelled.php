@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @var array<string, mixed>|null $service
  * @var string                    $site_name
  * @var string                    $booking_page_url
+ * @var string                    $body
+ * @var string                    $closing
  */
 ?>
 <p><?php
@@ -17,7 +19,7 @@ printf(
 	esc_html( $booking['customer_name'] )
 ); ?></p>
 
-<p><?php esc_html_e( 'We are sorry to let you know that the following booking has been cancelled.', 'wp-appointments' ); ?></p>
+<p><?php echo nl2br( esc_html( $body ) ); ?></p>
 
 <table cellpadding="0" cellspacing="0" border="0"
        style="width:100%;margin:24px 0;border:1px solid #e0e0e0;border-radius:4px;border-collapse:collapse;">
@@ -59,5 +61,5 @@ printf(
 </p>
 
 <p style="margin-top:32px;color:#888888;font-size:13px;">
-	<?php esc_html_e( 'If you have any questions, simply reply to this email.', 'wp-appointments' ); ?>
+	<?php echo esc_html( $closing ); ?>
 </p>

@@ -7,9 +7,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * Settings page — uses the WP Settings API.
  *
  * Options stored individually (not serialized) to avoid object injection risk:
- *   wpappt_admin_email   — notification recipient
- *   wpappt_sender_name   — From name used in all plugin emails
- *   wpappt_booking_page  — page ID where the booking widget is embedded
+ *   wpappt_admin_email    — notification recipient
+ *   wpappt_sender_name    — From name used in all plugin emails
+ *   wpappt_booking_page   — page ID where the booking widget is embedded
+ *   wpappt_email_language — language for outgoing emails ('en' or 'nl')
  */
 class WPAPPT_Admin_Settings_Page {
 
@@ -49,6 +50,16 @@ class WPAPPT_Admin_Settings_Page {
 				'type'              => 'integer',
 				'sanitize_callback' => [ $this, 'sanitize_booking_page' ],
 				'default'           => 0,
+			]
+		);
+
+		register_setting(
+			'wpappt_options',
+			'wpappt_email_language',
+			[
+				'type'              => 'string',
+				'sanitize_callback' => [ $this, 'sanitize_email_language' ],
+				'default'           => 'en',
 			]
 		);
 
@@ -104,6 +115,14 @@ class WPAPPT_Admin_Settings_Page {
 			self::SECTION
 		);
 
+		add_settings_field(
+			'wpappt_email_language',
+			__( 'Email Language', 'wp-appointments' ),
+			[ $this, 'field_email_language' ],
+			'wpappt_options',
+			self::SECTION
+		);
+
 		add_settings_field( 'wpappt_reminders_enabled', __( 'Send reminders',    'wp-appointments' ), [ $this, 'field_reminders_enabled' ], 'wpappt_options', self::SECTION_REMINDERS );
 		add_settings_field( 'wpappt_reminder_days',    __( 'Days in advance',   'wp-appointments' ), [ $this, 'field_reminder_days'    ], 'wpappt_options', self::SECTION_REMINDERS );
 
@@ -145,6 +164,25 @@ class WPAPPT_Admin_Settings_Page {
 			'option_none_value' => 0,
 		] );
 		echo '<p class="description">' . esc_html__( 'The page where the booking widget is embedded. Used to build reschedule links.', 'wp-appointments' ) . '</p>';
+	}
+
+	public function field_email_language(): void {
+		$value   = (string) get_option( 'wpappt_email_language', 'en' );
+		$options = [
+			'en' => __( 'English', 'wp-appointments' ),
+			'nl' => __( 'Dutch',   'wp-appointments' ),
+		];
+		echo '<select name="wpappt_email_language">';
+		foreach ( $options as $key => $label ) {
+			printf(
+				'<option value="%s"%s>%s</option>',
+				esc_attr( $key ),
+				selected( $value, $key, false ),
+				esc_html( $label )
+			);
+		}
+		echo '</select>';
+		echo '<p class="description">' . esc_html__( 'Language used for all outgoing emails. Set the text for each language on the Email Templates page.', 'wp-appointments' ) . '</p>';
 	}
 
 	public function field_reminders_enabled(): void {
@@ -215,6 +253,10 @@ class WPAPPT_Admin_Settings_Page {
 			);
 		}
 		return $page_id;
+	}
+
+	public function sanitize_email_language( $value ): string {
+		return in_array( $value, [ 'en', 'nl' ], true ) ? $value : 'en';
 	}
 
 	private function booking_page_is_valid( int $page_id ): bool {

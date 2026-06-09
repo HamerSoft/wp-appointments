@@ -9,16 +9,18 @@ if ( ! defined( 'ABSPATH' ) ) {
  */
 class WPAPPT_Admin {
 
-	private WPAPPT_Model_Booking      $booking_model;
-	private WPAPPT_Model_Service      $service_model;
-	private WPAPPT_Model_Availability $availability_model;
-	private WPAPPT_Admin_Settings_Page $settings_page;
+	private WPAPPT_Model_Booking           $booking_model;
+	private WPAPPT_Model_Service           $service_model;
+	private WPAPPT_Model_Availability      $availability_model;
+	private WPAPPT_Admin_Settings_Page     $settings_page;
+	private WPAPPT_Admin_Email_Templates_Page $email_templates_page;
 
 	public function __construct() {
-		$this->booking_model      = new WPAPPT_Model_Booking();
-		$this->service_model      = new WPAPPT_Model_Service();
-		$this->availability_model = new WPAPPT_Model_Availability();
-		$this->settings_page      = new WPAPPT_Admin_Settings_Page();
+		$this->booking_model         = new WPAPPT_Model_Booking();
+		$this->service_model         = new WPAPPT_Model_Service();
+		$this->availability_model    = new WPAPPT_Model_Availability();
+		$this->settings_page         = new WPAPPT_Admin_Settings_Page();
+		$this->email_templates_page  = new WPAPPT_Admin_Email_Templates_Page();
 	}
 
 	public function init(): void {
@@ -79,6 +81,15 @@ class WPAPPT_Admin {
 			'wpappt-settings',
 			[ $this, 'render_settings_page' ]
 		);
+
+		add_submenu_page(
+			'wpappt-bookings',
+			__( 'Email Templates', 'wp-appointments' ),
+			__( 'Email Templates', 'wp-appointments' ),
+			'manage_options',
+			'wpappt-email-templates',
+			[ $this, 'render_email_templates_page' ]
+		);
 	}
 
 	// -------------------------------------------------------------------------
@@ -101,6 +112,7 @@ class WPAPPT_Admin {
 			'appointments_page_wpappt-services',
 			'appointments_page_wpappt-availability',
 			'appointments_page_wpappt-settings',
+			'appointments_page_wpappt-email-templates',
 		];
 
 		if ( ! in_array( $hook, $plugin_hooks, true ) ) {
@@ -151,20 +163,21 @@ class WPAPPT_Admin {
 		}
 
 		$messages = [
-			'booking_confirmed'    => [ 'success', __( 'Booking confirmed.',                  'wp-appointments' ) ],
-			'booking_cancelled'    => [ 'success', __( 'Booking cancelled.',                  'wp-appointments' ) ],
-			'booking_notes_saved'  => [ 'success', __( 'Notes saved.',                        'wp-appointments' ) ],
-			'followup_sent'        => [ 'success', __( 'Follow-up email sent.',               'wp-appointments' ) ],
-			'service_saved'        => [ 'success', __( 'Service saved.',                      'wp-appointments' ) ],
-			'service_deleted'      => [ 'success', __( 'Service deleted.',                    'wp-appointments' ) ],
-			'availability_saved'   => [ 'success', __( 'Availability saved.',                 'wp-appointments' ) ],
-			'blocked_slot_added'   => [ 'success', __( 'Blocked slot added.',                 'wp-appointments' ) ],
-			'blocked_slot_deleted' => [ 'success', __( 'Blocked slot removed.',               'wp-appointments' ) ],
+			'booking_confirmed'      => [ 'success', __( 'Booking confirmed.',                  'wp-appointments' ) ],
+			'booking_cancelled'      => [ 'success', __( 'Booking cancelled.',                  'wp-appointments' ) ],
+			'booking_notes_saved'    => [ 'success', __( 'Notes saved.',                        'wp-appointments' ) ],
+			'followup_sent'          => [ 'success', __( 'Follow-up email sent.',               'wp-appointments' ) ],
+			'service_saved'          => [ 'success', __( 'Service saved.',                      'wp-appointments' ) ],
+			'service_deleted'        => [ 'success', __( 'Service deleted.',                    'wp-appointments' ) ],
+			'availability_saved'     => [ 'success', __( 'Availability saved.',                 'wp-appointments' ) ],
+			'blocked_slot_added'     => [ 'success', __( 'Blocked slot added.',                 'wp-appointments' ) ],
+			'blocked_slot_deleted'   => [ 'success', __( 'Blocked slot removed.',               'wp-appointments' ) ],
 			'blocked_series_deleted' => [ 'success', __( 'Blocked series removed.',             'wp-appointments' ) ],
-			'error_nonce'          => [ 'error',   __( 'Security check failed. Please try again.', 'wp-appointments' ) ],
-			'error_not_found'      => [ 'error',   __( 'Record not found.',                   'wp-appointments' ) ],
-			'error_invalid'        => [ 'error',   __( 'Invalid request.',                    'wp-appointments' ) ],
-			'error_save'           => [ 'error',   __( 'Could not save. Please try again.',   'wp-appointments' ) ],
+			'email_template_saved'   => [ 'success', __( 'Email templates saved.',              'wp-appointments' ) ],
+			'error_nonce'            => [ 'error',   __( 'Security check failed. Please try again.', 'wp-appointments' ) ],
+			'error_not_found'        => [ 'error',   __( 'Record not found.',                   'wp-appointments' ) ],
+			'error_invalid'          => [ 'error',   __( 'Invalid request.',                    'wp-appointments' ) ],
+			'error_save'             => [ 'error',   __( 'Could not save. Please try again.',   'wp-appointments' ) ],
 		];
 
 		if ( ! isset( $messages[ $notice ] ) ) {
@@ -242,5 +255,14 @@ class WPAPPT_Admin {
 		}
 
 		$this->settings_page->render();
+	}
+
+	public function render_email_templates_page(): void {
+		if ( ! current_user_can( 'manage_options' ) ) {
+			wp_die( esc_html__( 'You do not have permission to view this page.', 'wp-appointments' ) );
+		}
+
+		$this->email_templates_page->handle_save();
+		$this->email_templates_page->render();
 	}
 }

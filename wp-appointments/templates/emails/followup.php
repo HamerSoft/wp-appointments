@@ -9,6 +9,8 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @var array<string, mixed>|null $service
  * @var string                    $site_name
  * @var string                    $message   HTML-escaped, newlines converted to <br>.
+ * @var string                    $body
+ * @var string                    $closing
  */
 ?>
 <p><?php
@@ -17,11 +19,7 @@ printf(
 	esc_html( $booking['customer_name'] )
 ); ?></p>
 
-<p><?php
-printf(
-	esc_html__( 'You have a message from %s regarding your appointment:', 'wp-appointments' ),
-	esc_html( $site_name )
-); ?></p>
+<p><?php echo nl2br( esc_html( $body ) ); ?></p>
 
 <blockquote style="margin:24px 0;padding:16px 20px;background:#f9f9f9;border-left:4px solid #2c3e50;border-radius:2px;font-style:italic;color:#555555;">
 	<?php
@@ -43,5 +41,5 @@ printf(
 </p>
 
 <p style="margin-top:32px;color:#888888;font-size:13px;">
-	<?php esc_html_e( 'To reply, simply respond to this email.', 'wp-appointments' ); ?>
+	<?php echo esc_html( $closing ); ?>
 </p>

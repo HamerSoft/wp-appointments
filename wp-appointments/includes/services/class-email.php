@@ -96,14 +96,10 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
+		$this->apply_template_texts( $data, 'booking_received_customer' );
 		return $this->send(
 			$data['booking']['customer_email'],
-			sprintf(
-				/* translators: %s: site name */
-				__( '[%s] Booking request received', 'wp-appointments' ),
-				$data['site_name']
-			),
+			$data['subject'],
 			'booking-received-customer',
 			$data
 		);
@@ -114,14 +110,10 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
+		$this->apply_template_texts( $data, 'booking_received_admin' );
 		return $this->send(
 			$data['admin_email'],
-			sprintf(
-				/* translators: %s: customer name */
-				__( 'New booking request from %s', 'wp-appointments' ),
-				$data['booking']['customer_name']
-			),
+			$data['subject'],
 			'booking-received-admin',
 			$data
 		);
@@ -135,16 +127,11 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
 		$data['reschedule_link'] = $reschedule_link;
-
+		$this->apply_template_texts( $data, 'booking_confirmed' );
 		return $this->send(
 			$data['booking']['customer_email'],
-			sprintf(
-				/* translators: %s: site name */
-				__( '[%s] Your booking is confirmed', 'wp-appointments' ),
-				$data['site_name']
-			),
+			$data['subject'],
 			'booking-confirmed',
 			$data,
 			$attachments
@@ -156,14 +143,10 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
+		$this->apply_template_texts( $data, 'booking_cancelled' );
 		return $this->send(
 			$data['booking']['customer_email'],
-			sprintf(
-				/* translators: %s: site name */
-				__( '[%s] Your booking has been cancelled', 'wp-appointments' ),
-				$data['site_name']
-			),
+			$data['subject'],
 			'booking-cancelled',
 			$data,
 			$attachments
@@ -180,16 +163,11 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
 		$data['reschedule_link'] = $reschedule_link;
-
+		$this->apply_template_texts( $data, 'reschedule_customer' );
 		return $this->send(
 			$data['booking']['customer_email'],
-			sprintf(
-				/* translators: %s: site name */
-				__( '[%s] Your booking has been rescheduled', 'wp-appointments' ),
-				$data['site_name']
-			),
+			$data['subject'],
 			'reschedule-customer',
 			$data
 		);
@@ -201,14 +179,10 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
+		$this->apply_template_texts( $data, 'reschedule_admin' );
 		return $this->send(
 			$data['admin_email'],
-			sprintf(
-				/* translators: %s: customer name */
-				__( 'Booking rescheduled by %s', 'wp-appointments' ),
-				$data['booking']['customer_name']
-			),
+			$data['subject'],
 			'reschedule-admin',
 			$data
 		);
@@ -220,15 +194,10 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
+		$this->apply_template_texts( $data, 'reminder_customer' );
 		return $this->send(
 			$data['booking']['customer_email'],
-			sprintf(
-				/* translators: 1: site name, 2: appointment date */
-				__( '[%1$s] Reminder: your appointment on %2$s', 'wp-appointments' ),
-				$data['site_name'],
-				$data['booking']['appointment_date']
-			),
+			$data['subject'],
 			'reminder-customer',
 			$data
 		);
@@ -240,18 +209,12 @@ class WPAPPT_Service_Email {
 		if ( null === $data ) {
 			return false;
 		}
-
-		// Message is already sanitised (sanitize_textarea_field) by the controller.
-		// Convert newlines to <br> for the HTML template.
+		// $message is the per-followup custom text. $body comes from the template store.
 		$data['message'] = nl2br( esc_html( $message ) );
-
+		$this->apply_template_texts( $data, 'followup' );
 		return $this->send(
 			$data['booking']['customer_email'],
-			sprintf(
-				/* translators: %s: site name */
-				__( 'A message from %s', 'wp-appointments' ),
-				$data['site_name']
-			),
+			$data['subject'],
 			'followup',
 			$data,
 			$attachments
@@ -286,6 +249,7 @@ class WPAPPT_Service_Email {
 			'admin_panel_url' => admin_url( 'admin.php?page=wpappt-bookings&action=view&id=' . $booking_id ),
 			'booking_page_url'=> $this->get_booking_page_url(),
 			'reschedule_link' => '',
+			'subject'         => '',
 		];
 	}
 
@@ -366,5 +330,30 @@ class WPAPPT_Service_Email {
 	private function get_booking_page_url(): string {
 		$page_id = (int) get_option( 'wpappt_booking_page', 0 );
 		return $page_id > 0 ? (string) get_permalink( $page_id ) : (string) home_url();
+	}
+
+	private function get_lang(): string {
+		$lang = (string) get_option( 'wpappt_email_language', 'en' );
+		return in_array( $lang, [ 'en', 'nl' ], true ) ? $lang : 'en';
+	}
+
+	private function apply_template_texts( array &$data, string $slug ): void {
+		$texts = WPAPPT_Service_Email_Template_Store::get_texts( $slug, $this->get_lang() );
+		if ( empty( $texts ) ) {
+			return;
+		}
+		$tokens = [
+			'{{site_name}}'        => $data['site_name'],
+			'{{customer_name}}'    => $data['booking']['customer_name'] ?? '',
+			'{{appointment_date}}' => $data['booking']['appointment_date'] ?? '',
+			'{{start_time}}'       => isset( $data['booking']['start_time'] )
+			                            ? substr( $data['booking']['start_time'], 0, 5 ) : '',
+			'{{end_time}}'         => isset( $data['booking']['end_time'] )
+			                            ? substr( $data['booking']['end_time'], 0, 5 ) : '',
+			'{{service_name}}'     => $data['service']['name'] ?? '',
+		];
+		foreach ( $texts as $field => $value ) {
+			$data[ $field ] = strtr( $value, $tokens );
+		}
 	}
 }

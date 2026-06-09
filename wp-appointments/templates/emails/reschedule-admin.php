@@ -9,13 +9,10 @@ if ( ! defined( 'ABSPATH' ) ) {
  * @var array<string, mixed>|null $service
  * @var string                    $site_name
  * @var string                    $admin_panel_url
+ * @var string                    $body
  */
 ?>
-<p><?php
-printf(
-	esc_html__( '%s has rescheduled their appointment. The booking status has been reset to Pending.', 'wp-appointments' ),
-	esc_html( $booking['customer_name'] )
-); ?></p>
+<p><?php echo nl2br( esc_html( $body ) ); ?></p>
 
 <table cellpadding="0" cellspacing="0" border="0"
        style="width:100%;margin:24px 0;border:1px solid #e0e0e0;border-radius:4px;border-collapse:collapse;">

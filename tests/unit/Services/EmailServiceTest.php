@@ -434,4 +434,127 @@ class EmailServiceTest extends WpTestCase {
 
 		$this->assertSame( [ '/tmp/intake.pdf' ], $capturedAttachments );
 	}
+
+	// =========================================================================
+	// Template store integration
+	// =========================================================================
+
+	/** @test */
+	public function send_booking_confirmed_uses_subject_override_from_template_store(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_email_language' )                          return 'en';
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_subject' )        return 'Custom Subject Override';
+			if ( $key === 'wpappt_sender_name' )                             return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )                             return 'admin@example.com';
+			return $default ?? '';
+		} );
+
+		$capturedSubject = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedSubject ): bool {
+				$capturedSubject = $subject;
+				return true;
+			}
+		);
+
+		$this->makeService( $booking_model, $service_model )->send_booking_confirmed( 1 );
+
+		$this->assertSame( 'Custom Subject Override', $capturedSubject );
+	}
+
+	/** @test */
+	public function send_booking_confirmed_uses_nl_subject_when_language_is_nl(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_email_language' )                          return 'nl';
+			if ( $key === 'wpappt_tpl_booking_confirmed_nl_subject' )        return 'Uw afspraak is bevestigd';
+			if ( $key === 'wpappt_sender_name' )                             return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )                             return 'admin@example.com';
+			return $default ?? '';
+		} );
+
+		$capturedSubject = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedSubject ): bool {
+				$capturedSubject = $subject;
+				return true;
+			}
+		);
+
+		$this->makeService( $booking_model, $service_model )->send_booking_confirmed( 1 );
+
+		$this->assertSame( 'Uw afspraak is bevestigd', $capturedSubject );
+	}
+
+	/** @test */
+	public function send_booking_confirmed_falls_back_to_en_for_invalid_language(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_email_language' ) return 'xx'; // invalid — must fall back to 'en'
+			if ( $key === 'wpappt_sender_name' )    return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )    return 'admin@example.com';
+			return $default ?? '';
+		} );
+
+		$capturedSubject = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedSubject ): bool {
+				$capturedSubject = $subject;
+				return true;
+			}
+		);
+
+		$result = $this->makeService( $booking_model, $service_model )->send_booking_confirmed( 1 );
+
+		$this->assertTrue( $result );
+		// EN default subject with {{site_name}} substituted — proves get_lang() fell back to 'en'.
+		$this->assertSame( '[Test Spa] Your booking is confirmed', $capturedSubject );
+	}
+
+	/** @test */
+	public function apply_template_texts_substitutes_site_name_token_in_subject(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_email_language' )                               return 'en';
+			if ( $key === 'wpappt_sender_name' )                                  return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )                                  return 'admin@example.com';
+			return $default ?? '';
+		} );
+		// get_bloginfo('name') → 'Test Spa' is already stubbed in setUp().
+
+		$capturedSubject = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedSubject ): bool {
+				$capturedSubject = $subject;
+				return true;
+			}
+		);
+
+		$this->makeService( $booking_model, $service_model )->send_booking_confirmed( 1 );
+
+		// Default subject = '[{{site_name}}] Your booking is confirmed'
+		// After substitution with site_name = 'Test Spa':
+		$this->assertSame( '[Test Spa] Your booking is confirmed', $capturedSubject );
+	}
 }
