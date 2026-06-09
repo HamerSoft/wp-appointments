@@ -123,6 +123,15 @@ $can_cancel    = ( 'cancelled' !== $status );
 				<input type="hidden" name="action"     value="wpappt_confirm_booking">
 				<input type="hidden" name="booking_id" value="<?php echo $booking_id; ?>">
 				<?php wp_nonce_field( "wpappt_confirm_booking_{$booking_id}" ); ?>
+				<p class="wpappt-attachment-picker">
+					<button type="button" class="button wpappt-attach-btn">
+						<?php esc_html_e( 'Attach file', 'wp-appointments' ); ?>
+					</button>
+					<span class="wpappt-attachment-name" style="display:none;"></span>
+					<button type="button" class="wpappt-attachment-clear" style="display:none;"
+							aria-label="<?php esc_attr_e( 'Remove attachment', 'wp-appointments' ); ?>">&#x2715;</button>
+					<input type="hidden" name="attachment_id" class="wpappt-attachment-id" value="">
+				</p>
 				<button type="submit" class="button button-primary">
 					<?php esc_html_e( 'Confirm Booking', 'wp-appointments' ); ?>
 				</button>
@@ -136,6 +145,15 @@ $can_cancel    = ( 'cancelled' !== $status );
 				<input type="hidden" name="action"     value="wpappt_cancel_booking">
 				<input type="hidden" name="booking_id" value="<?php echo $booking_id; ?>">
 				<?php wp_nonce_field( "wpappt_cancel_booking_{$booking_id}" ); ?>
+				<p class="wpappt-attachment-picker">
+					<button type="button" class="button wpappt-attach-btn">
+						<?php esc_html_e( 'Attach file', 'wp-appointments' ); ?>
+					</button>
+					<span class="wpappt-attachment-name" style="display:none;"></span>
+					<button type="button" class="wpappt-attachment-clear" style="display:none;"
+							aria-label="<?php esc_attr_e( 'Remove attachment', 'wp-appointments' ); ?>">&#x2715;</button>
+					<input type="hidden" name="attachment_id" class="wpappt-attachment-id" value="">
+				</p>
 				<button type="submit" class="button button-secondary wpappt-btn-danger">
 					<?php esc_html_e( 'Cancel Booking', 'wp-appointments' ); ?>
 				</button>
@@ -195,6 +213,15 @@ $can_cancel    = ( 'cancelled' !== $status );
 				<p class="wpappt-char-count description">
 					<span id="wpappt-followup-remaining">2000</span>
 					<?php esc_html_e( 'characters remaining', 'wp-appointments' ); ?>
+				</p>
+				<p class="wpappt-attachment-picker">
+					<button type="button" class="button wpappt-attach-btn">
+						<?php esc_html_e( 'Attach file', 'wp-appointments' ); ?>
+					</button>
+					<span class="wpappt-attachment-name" style="display:none;"></span>
+					<button type="button" class="wpappt-attachment-clear" style="display:none;"
+							aria-label="<?php esc_attr_e( 'Remove attachment', 'wp-appointments' ); ?>">&#x2715;</button>
+					<input type="hidden" name="attachment_id" class="wpappt-attachment-id" value="">
 				</p>
 				<p>
 					<button type="submit" class="button button-primary">

@@ -55,6 +55,8 @@ class WPAPPT_Controller_Admin_Ajax {
 		check_admin_referer( "wpappt_confirm_booking_{$id}" );
 		$this->require_capability();
 
+		$attachments = $this->resolve_attachment( (int) ( $_POST['attachment_id'] ?? 0 ) );
+
 		$actor   = wp_get_current_user()->user_login ?: 'admin';
 		$success = $this->booking_model->update_status( $id, 'confirmed', $actor );
 
@@ -62,7 +64,7 @@ class WPAPPT_Controller_Admin_Ajax {
 			$this->redirect( 'wpappt-bookings', 'error_not_found', [ 'action' => 'view', 'id' => $id ] );
 		}
 
-		do_action( 'wpappt_booking_status_changed', $id, 'confirmed', 'admin' );
+		do_action( 'wpappt_booking_status_changed', $id, 'confirmed', 'admin', $attachments );
 
 		$this->redirect( 'wpappt-bookings', 'booking_confirmed', [ 'action' => 'view', 'id' => $id ] );
 	}
@@ -72,6 +74,8 @@ class WPAPPT_Controller_Admin_Ajax {
 		check_admin_referer( "wpappt_cancel_booking_{$id}" );
 		$this->require_capability();
 
+		$attachments = $this->resolve_attachment( (int) ( $_POST['attachment_id'] ?? 0 ) );
+
 		$actor   = wp_get_current_user()->user_login ?: 'admin';
 		$success = $this->booking_model->update_status( $id, 'cancelled', $actor );
 
@@ -79,7 +83,7 @@ class WPAPPT_Controller_Admin_Ajax {
 			$this->redirect( 'wpappt-bookings', 'error_not_found', [ 'action' => 'view', 'id' => $id ] );
 		}
 
-		do_action( 'wpappt_booking_status_changed', $id, 'cancelled', 'admin' );
+		do_action( 'wpappt_booking_status_changed', $id, 'cancelled', 'admin', $attachments );
 
 		$this->redirect( 'wpappt-bookings', 'booking_cancelled', [ 'action' => 'view', 'id' => $id ] );
 	}
@@ -107,8 +111,9 @@ class WPAPPT_Controller_Admin_Ajax {
 			$this->redirect( 'wpappt-bookings', 'error_invalid', [ 'action' => 'view', 'id' => $id ] );
 		}
 
-		// Email service (Step 6) hooks into this action.
-		do_action( 'wpappt_send_followup_email', $id, $message );
+		$attachments = $this->resolve_attachment( (int) ( $_POST['attachment_id'] ?? 0 ) );
+
+		do_action( 'wpappt_send_followup_email', $id, $message, $attachments );
 
 		$this->redirect( 'wpappt-bookings', 'followup_sent', [ 'action' => 'view', 'id' => $id ] );
 	}
@@ -336,6 +341,34 @@ class WPAPPT_Controller_Admin_Ajax {
 	// =========================================================================
 	// Helpers
 	// =========================================================================
+
+	/**
+	 * Resolve a WP attachment ID to a server file path for wp_mail().
+	 *
+	 * Returns a one-element array with the path, or an empty array if the ID
+	 * is invalid, not an attachment post type, or the file doesn't exist on disk.
+	 *
+	 * @return string[]
+	 */
+	private function resolve_attachment( int $id ): array {
+		if ( $id <= 0 ) {
+			return [];
+		}
+
+		$post = get_post( $id );
+
+		if ( ! $post || 'attachment' !== $post->post_type ) {
+			return [];
+		}
+
+		$path = get_attached_file( $id );
+
+		if ( ! $path || ! file_exists( $path ) ) {
+			return [];
+		}
+
+		return [ $path ];
+	}
 
 	private function require_capability(): void {
 		if ( ! current_user_can( 'manage_options' ) ) {

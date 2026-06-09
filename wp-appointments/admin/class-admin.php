@@ -121,6 +121,18 @@ class WPAPPT_Admin {
 			WPAPPT_VERSION,
 			true
 		);
+
+		// phpcs:ignore WordPress.Security.NonceVerification
+		if ( 'toplevel_page_wpappt-bookings' === $hook && 'view' === ( $_GET['action'] ?? '' ) ) {
+			wp_enqueue_media();
+			wp_enqueue_script(
+				'wpappt-booking-attachments',
+				WPAPPT_PLUGIN_URL . 'assets/js/admin-booking-attachments.js',
+				[],
+				WPAPPT_VERSION,
+				true
+			);
+		}
 	}
 
 	// -------------------------------------------------------------------------

@@ -208,8 +208,10 @@ class TokenServiceTest extends WpTestCase {
 	public function init_registers_status_changed_hook_at_priority_5(): void {
 		Functions\expect( 'add_action' )
 			->once()
-			->withArgs( function ( string $hook, callable $cb, int $priority ): bool {
-				return $hook === 'wpappt_booking_status_changed' && $priority === 5;
+			->withArgs( function ( string $hook, callable $cb, int $priority, int $accepted_args ): bool {
+				return $hook === 'wpappt_booking_status_changed'
+				    && $priority === 5
+				    && $accepted_args === 4;
 			} );
 
 		$this->makeService()->init();
@@ -228,10 +230,11 @@ class TokenServiceTest extends WpTestCase {
 
 		Functions\expect( 'do_action' )
 			->once()
-			->withArgs( function ( string $hook, int $id, string $link ): bool {
+			->withArgs( function ( string $hook, int $id, string $link, array $attachments ): bool {
 				return $hook === 'wpappt_booking_confirmed'
 				    && $id === 1
-				    && str_contains( $link, 'reschedule=' );
+				    && str_contains( $link, 'reschedule=' )
+				    && $attachments === [];
 			} );
 
 		$this->makeService( $booking_model )->on_status_changed( 1, 'confirmed' );
@@ -246,5 +249,57 @@ class TokenServiceTest extends WpTestCase {
 
 		$this->makeService( $booking_model )->on_status_changed( 1, 'cancelled' );
 		$this->makeService( $booking_model )->on_status_changed( 1, 'pending' );
+	}
+
+	// =========================================================================
+	// Attachment passthrough
+	// =========================================================================
+
+	/** @test */
+	public function on_status_changed_passes_attachments_to_booking_confirmed_action(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$booking_model->shouldReceive( 'set_reschedule_token' )->once();
+
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\when( 'home_url' )->justReturn( 'http://example.com/' );
+		Functions\when( 'add_query_arg' )->justReturn( 'http://example.com/?reschedule=abc' );
+
+		$capturedAttachments = 'not-set';
+		Functions\when( 'do_action' )->alias(
+			function ( string $hook, ...$args ) use ( &$capturedAttachments ): void {
+				if ( 'wpappt_booking_confirmed' === $hook ) {
+					$capturedAttachments = $args[2] ?? [];
+				}
+			}
+		);
+
+		$this->makeService( $booking_model )
+		     ->on_status_changed( 1, 'confirmed', 'admin', [ '/tmp/intake.pdf' ] );
+
+		$this->assertSame( [ '/tmp/intake.pdf' ], $capturedAttachments );
+	}
+
+	/** @test */
+	public function on_status_changed_passes_empty_attachments_when_omitted(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$booking_model->shouldReceive( 'set_reschedule_token' )->once();
+
+		Functions\when( 'get_option' )->justReturn( 0 );
+		Functions\when( 'home_url' )->justReturn( 'http://example.com/' );
+		Functions\when( 'add_query_arg' )->justReturn( 'http://example.com/?reschedule=abc' );
+
+		$capturedAttachments = 'not-set';
+		Functions\when( 'do_action' )->alias(
+			function ( string $hook, ...$args ) use ( &$capturedAttachments ): void {
+				if ( 'wpappt_booking_confirmed' === $hook ) {
+					$capturedAttachments = $args[2] ?? [];
+				}
+			}
+		);
+
+		$this->makeService( $booking_model )
+		     ->on_status_changed( 1, 'confirmed' );
+
+		$this->assertSame( [], $capturedAttachments );
 	}
 }

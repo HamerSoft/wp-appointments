@@ -36,16 +36,16 @@ class WPAPPT_Service_Email {
 		add_action( 'wpappt_booking_created', [ $this, 'on_booking_created' ] );
 
 		// Admin cancels a booking (confirmed fires separately via token service).
-		add_action( 'wpappt_booking_status_changed', [ $this, 'on_status_changed' ], 10, 2 );
+		add_action( 'wpappt_booking_status_changed', [ $this, 'on_status_changed' ], 10, 4 );
 
 		// Token service fires this (priority 5) after generating a reschedule link.
-		add_action( 'wpappt_booking_confirmed', [ $this, 'on_booking_confirmed' ], 10, 2 );
+		add_action( 'wpappt_booking_confirmed', [ $this, 'on_booking_confirmed' ], 10, 3 );
 
 		// Reschedule controller fires this after a successful reschedule.
 		add_action( 'wpappt_booking_rescheduled', [ $this, 'on_rescheduled' ], 10, 2 );
 
 		// Admin sends a manual follow-up from the booking detail page.
-		add_action( 'wpappt_send_followup_email', [ $this, 'on_followup' ], 10, 2 );
+		add_action( 'wpappt_send_followup_email', [ $this, 'on_followup' ], 10, 3 );
 
 		// Daily cron reminder — fired by WPAPPT_Service_Reminder.
 		add_action( 'wpappt_booking_reminder', [ $this, 'on_reminder' ] );
@@ -60,18 +60,18 @@ class WPAPPT_Service_Email {
 		$this->send_booking_received_admin( $booking_id );
 	}
 
-	public function on_status_changed( int $booking_id, string $new_status ): void {
+	public function on_status_changed( int $booking_id, string $new_status, string $actor = '', array $attachments = [] ): void {
 		// 'confirmed' is handled by on_booking_confirmed() — the token service
 		// fires wpappt_booking_confirmed (priority 5) before this listener runs,
 		// so the confirmation email always carries a fresh reschedule link.
 		match ( $new_status ) {
-			'cancelled' => $this->send_booking_cancelled( $booking_id ),
+			'cancelled' => $this->send_booking_cancelled( $booking_id, $attachments ),
 			default     => null,
 		};
 	}
 
-	public function on_booking_confirmed( int $booking_id, string $reschedule_link ): void {
-		$this->send_booking_confirmed( $booking_id, $reschedule_link );
+	public function on_booking_confirmed( int $booking_id, string $reschedule_link, array $attachments = [] ): void {
+		$this->send_booking_confirmed( $booking_id, $reschedule_link, $attachments );
 	}
 
 	public function on_rescheduled( int $booking_id, string $reschedule_link ): void {
@@ -79,8 +79,8 @@ class WPAPPT_Service_Email {
 		$this->send_reschedule_admin( $booking_id );
 	}
 
-	public function on_followup( int $booking_id, string $message ): void {
-		$this->send_followup( $booking_id, $message );
+	public function on_followup( int $booking_id, string $message, array $attachments = [] ): void {
+		$this->send_followup( $booking_id, $message, $attachments );
 	}
 
 	public function on_reminder( int $booking_id ): void {
@@ -130,7 +130,7 @@ class WPAPPT_Service_Email {
 	/**
 	 * @param string $reschedule_link Raw reschedule URL (supplied by token service in Step 7).
 	 */
-	public function send_booking_confirmed( int $booking_id, string $reschedule_link = '' ): bool {
+	public function send_booking_confirmed( int $booking_id, string $reschedule_link = '', array $attachments = [] ): bool {
 		$data = $this->load_booking_data( $booking_id );
 		if ( null === $data ) {
 			return false;
@@ -146,11 +146,12 @@ class WPAPPT_Service_Email {
 				$data['site_name']
 			),
 			'booking-confirmed',
-			$data
+			$data,
+			$attachments
 		);
 	}
 
-	public function send_booking_cancelled( int $booking_id ): bool {
+	public function send_booking_cancelled( int $booking_id, array $attachments = [] ): bool {
 		$data = $this->load_booking_data( $booking_id );
 		if ( null === $data ) {
 			return false;
@@ -164,7 +165,8 @@ class WPAPPT_Service_Email {
 				$data['site_name']
 			),
 			'booking-cancelled',
-			$data
+			$data,
+			$attachments
 		);
 	}
 
@@ -233,7 +235,7 @@ class WPAPPT_Service_Email {
 	}
 
 	/** Admin-written follow-up message sent to the customer. */
-	public function send_followup( int $booking_id, string $message ): bool {
+	public function send_followup( int $booking_id, string $message, array $attachments = [] ): bool {
 		$data = $this->load_booking_data( $booking_id );
 		if ( null === $data ) {
 			return false;
@@ -251,7 +253,8 @@ class WPAPPT_Service_Email {
 				$data['site_name']
 			),
 			'followup',
-			$data
+			$data,
+			$attachments
 		);
 	}
 
@@ -290,8 +293,9 @@ class WPAPPT_Service_Email {
 	 * Render template, wrap in base shell, send via wp_mail.
 	 *
 	 * @param array<string, mixed> $data
+	 * @param string[]             $attachments Server file paths passed to wp_mail as the 5th argument.
 	 */
-	private function send( string $to, string $subject, string $template, array $data ): bool {
+	private function send( string $to, string $subject, string $template, array $data, array $attachments = [] ): bool {
 		$html = $this->render_with_base( $template, $data );
 
 		if ( '' === $html ) {
@@ -300,7 +304,7 @@ class WPAPPT_Service_Email {
 			return false;
 		}
 
-		return (bool) wp_mail( $to, $subject, $html, $this->get_headers() );
+		return (bool) wp_mail( $to, $subject, $html, $this->get_headers(), $attachments );
 	}
 
 	/**

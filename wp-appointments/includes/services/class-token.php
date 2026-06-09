@@ -41,7 +41,7 @@ class WPAPPT_Service_Token {
 	 * the email service tries to send the confirmation message.
 	 */
 	public function init(): void {
-		add_action( 'wpappt_booking_status_changed', [ $this, 'on_status_changed' ], 5, 2 );
+		add_action( 'wpappt_booking_status_changed', [ $this, 'on_status_changed' ], 5, 4 );
 	}
 
 	// =========================================================================
@@ -53,7 +53,7 @@ class WPAPPT_Service_Token {
 	 * wpappt_booking_confirmed so the email service can send the confirmation
 	 * with the fresh reschedule link embedded.
 	 */
-	public function on_status_changed( int $booking_id, string $new_status ): void {
+	public function on_status_changed( int $booking_id, string $new_status, string $actor = '', array $attachments = [] ): void {
 		if ( 'confirmed' !== $new_status ) {
 			return;
 		}
@@ -61,7 +61,7 @@ class WPAPPT_Service_Token {
 		$raw_token = $this->generate( $booking_id );
 		$link      = $this->build_link( $raw_token );
 
-		do_action( 'wpappt_booking_confirmed', $booking_id, $link );
+		do_action( 'wpappt_booking_confirmed', $booking_id, $link, $attachments );
 	}
 
 	// =========================================================================

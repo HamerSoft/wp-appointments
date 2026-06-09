@@ -338,4 +338,100 @@ class EmailServiceTest extends WpTestCase {
 		$this->makeService( $booking_model, $service_model )
 		     ->on_rescheduled( 1, 'http://example.com/book/?reschedule=xyz' );
 	}
+
+	// =========================================================================
+	// Attachment forwarding
+	// =========================================================================
+
+	/** @test */
+	public function send_booking_confirmed_passes_attachments_as_5th_arg_to_wp_mail(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		$capturedAttachments = 'not-set';
+		Functions\expect( 'wp_mail' )
+			->once()
+			->withArgs( function ( $to, $subject, $body, $headers, $attachments ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			} )
+			->andReturn( true );
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_booking_confirmed( 1, '', [ '/tmp/intake.pdf' ] );
+
+		$this->assertSame( [ '/tmp/intake.pdf' ], $capturedAttachments );
+	}
+
+	/** @test */
+	public function send_booking_confirmed_passes_empty_attachments_by_default(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		$capturedAttachments = 'not-set';
+		Functions\expect( 'wp_mail' )
+			->once()
+			->withArgs( function ( $to, $subject, $body, $headers, $attachments ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			} )
+			->andReturn( true );
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_booking_confirmed( 1 );
+
+		$this->assertSame( [], $capturedAttachments );
+	}
+
+	/** @test */
+	public function send_booking_cancelled_passes_attachments_as_5th_arg_to_wp_mail(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		$capturedAttachments = 'not-set';
+		Functions\expect( 'wp_mail' )
+			->once()
+			->withArgs( function ( $to, $subject, $body, $headers, $attachments ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			} )
+			->andReturn( true );
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_booking_cancelled( 1, [ '/tmp/intake.pdf' ] );
+
+		$this->assertSame( [ '/tmp/intake.pdf' ], $capturedAttachments );
+	}
+
+	/** @test */
+	public function send_followup_passes_attachments_as_5th_arg_to_wp_mail(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		$capturedAttachments = 'not-set';
+		Functions\expect( 'wp_mail' )
+			->once()
+			->withArgs( function ( $to, $subject, $body, $headers, $attachments ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			} )
+			->andReturn( true );
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_followup( 1, 'Hi Jane!', [ '/tmp/intake.pdf' ] );
+
+		$this->assertSame( [ '/tmp/intake.pdf' ], $capturedAttachments );
+	}
 }
