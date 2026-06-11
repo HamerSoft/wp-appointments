@@ -15,6 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 define( 'WPAPPT_VERSION',    '1.0.0' );
+define( 'WPAPPT_DB_VERSION', '1.1' );
 define( 'WPAPPT_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 define( 'WPAPPT_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 define( 'WPAPPT_PLUGIN_FILE', __FILE__ );
@@ -49,5 +50,6 @@ add_action( 'plugins_loaded', function (): void {
 		false,
 		dirname( plugin_basename( __FILE__ ) ) . '/languages'
 	);
+	WPAPPT_Activator::maybe_upgrade();
 	WPAPPT_Plugin::get_instance();
 } );

@@ -18,8 +18,21 @@ class WPAPPT_Activator {
 		self::set_default_options();
 		self::schedule_cron();
 
-		// Store the version so future activations can run targeted upgrades.
-		update_option( 'wpappt_version', WPAPPT_VERSION );
+		update_option( 'wpappt_version',    WPAPPT_VERSION );
+		update_option( 'wpappt_db_version', WPAPPT_DB_VERSION );
+	}
+
+	/**
+	 * Runs on every plugins_loaded. Re-runs dbDelta when WPAPPT_DB_VERSION
+	 * has advanced beyond the stored value — picks up schema changes deployed
+	 * without a deactivate/reactivate cycle.
+	 */
+	public static function maybe_upgrade(): void {
+		if ( (string) get_option( 'wpappt_db_version' ) === WPAPPT_DB_VERSION ) {
+			return;
+		}
+		self::create_tables();
+		update_option( 'wpappt_db_version', WPAPPT_DB_VERSION );
 	}
 
 	// -------------------------------------------------------------------------
