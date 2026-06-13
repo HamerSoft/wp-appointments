@@ -50,12 +50,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 					<div class="wpappt-tabs-wrap">
 						<?php foreach ( [ 'en', 'nl' ] as $lang ) : ?>
 						<div class="wpappt-tab-panel wpappt-tab-panel--<?php echo esc_attr( $lang ); ?>">
-							<?php foreach ( $config['fields'] as $field => $default ) :
+							<?php foreach ( $config['fields'] as $field => $defaults ) :
 								$opt_key    = "wpappt_tpl_{$slug}_{$lang}_{$field}";
 								$stored     = (string) get_option( $opt_key, '' );
 								$input_name = "wpappt_tpl[{$slug}][{$lang}][{$field}]";
 								$field_id   = "wpappt_tpl_{$slug}_{$lang}_{$field}";
 								$label_text = ucfirst( $field );
+								$placeholder = $defaults[ $lang ];
 							?>
 							<p>
 								<label for="<?php echo esc_attr( $field_id ); ?>">
@@ -66,13 +67,13 @@ if ( ! defined( 'ABSPATH' ) ) {
 								       id="<?php echo esc_attr( $field_id ); ?>"
 								       name="<?php echo esc_attr( $input_name ); ?>"
 								       value="<?php echo esc_attr( $stored ); ?>"
-								       placeholder="<?php echo esc_attr( $default ); ?>"
+								       placeholder="<?php echo esc_attr( $placeholder ); ?>"
 								       class="large-text">
 								<?php else : ?>
 								<textarea id="<?php echo esc_attr( $field_id ); ?>"
 								          name="<?php echo esc_attr( $input_name ); ?>"
 								          rows="5"
-								          placeholder="<?php echo esc_attr( $default ); ?>"
+								          placeholder="<?php echo esc_attr( $placeholder ); ?>"
 								          class="large-text"><?php echo esc_textarea( $stored ); ?></textarea>
 								<?php endif; ?>
 							</p>

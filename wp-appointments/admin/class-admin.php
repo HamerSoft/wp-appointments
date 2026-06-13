@@ -24,10 +24,15 @@ class WPAPPT_Admin {
 	}
 
 	public function init(): void {
-		add_action( 'admin_menu',            [ $this, 'register_menus'        ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets'        ] );
-		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_menu_icon_fix' ] );
-		add_action( 'admin_notices',         [ $this, 'display_notices'       ] );
+		add_action( 'admin_menu',            [ $this, 'register_menus'               ] );
+		add_action( 'admin_init',            [ $this, 'handle_email_templates_save'  ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_assets'               ] );
+		add_action( 'admin_enqueue_scripts', [ $this, 'enqueue_menu_icon_fix'        ] );
+		add_action( 'admin_notices',         [ $this, 'display_notices'              ] );
+	}
+
+	public function handle_email_templates_save(): void {
+		$this->email_templates_page->handle_save();
 	}
 
 	// -------------------------------------------------------------------------
@@ -262,7 +267,6 @@ class WPAPPT_Admin {
 			wp_die( esc_html__( 'You do not have permission to view this page.', 'wp-appointments' ) );
 		}
 
-		$this->email_templates_page->handle_save();
 		$this->email_templates_page->render();
 	}
 }
