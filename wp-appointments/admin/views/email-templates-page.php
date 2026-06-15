@@ -78,6 +78,30 @@ if ( ! defined( 'ABSPATH' ) ) {
 								<?php endif; ?>
 							</p>
 							<?php endforeach; ?>
+
+						<?php if ( ! empty( $config['customer_facing'] ) ) :
+							$att_id       = (int) get_option( "wpappt_tpl_{$slug}_{$lang}_attachment_id", 0 );
+							$att_path     = $att_id > 0 ? get_attached_file( $att_id ) : false;
+							$att_filename = ( $att_path && file_exists( $att_path ) ) ? wp_basename( $att_path ) : '';
+						?>
+						<p class="wpappt-attachment-picker">
+							<label><strong><?php esc_html_e( 'Default attachment', 'wp-appointments' ); ?></strong></label><br>
+							<button type="button" class="button wpappt-attach-btn">
+								<?php esc_html_e( 'Attach file', 'wp-appointments' ); ?>
+							</button>
+							<span class="wpappt-attachment-name"
+							      style="<?php echo $att_filename ? '' : 'display:none;'; ?>">
+								<?php echo esc_html( $att_filename ); ?>
+							</span>
+							<button type="button" class="wpappt-attachment-clear"
+							        style="<?php echo $att_filename ? '' : 'display:none;'; ?>"
+							        aria-label="<?php esc_attr_e( 'Remove attachment', 'wp-appointments' ); ?>">&#x2715;</button>
+							<input type="hidden"
+							       name="wpappt_tpl[<?php echo esc_attr( $slug ); ?>][<?php echo esc_attr( $lang ); ?>][attachment_id]"
+							       class="wpappt-attachment-id"
+							       value="<?php echo esc_attr( (string) $att_id ); ?>">
+						</p>
+						<?php endif; ?>
 						</div>
 						<?php endforeach; ?>
 					</div><!-- .wpappt-tabs-wrap -->
