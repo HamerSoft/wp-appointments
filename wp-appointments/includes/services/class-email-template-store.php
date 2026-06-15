@@ -18,8 +18,9 @@ class WPAPPT_Service_Email_Template_Store {
 	public static function get_registry(): array {
 		return [
 			'booking_received_customer' => [
-				'label'  => 'Booking Received (Customer)',
-				'fields' => [
+				'label'           => 'Booking Received (Customer)',
+				'customer_facing' => true,
+				'fields'          => [
 					'subject' => [
 						'en' => '[{{site_name}}] Booking request received',
 						'nl' => '[{{site_name}}] Boekingsverzoek ontvangen',
@@ -35,8 +36,9 @@ class WPAPPT_Service_Email_Template_Store {
 				],
 			],
 			'booking_confirmed' => [
-				'label'  => 'Booking Confirmed',
-				'fields' => [
+				'label'           => 'Booking Confirmed',
+				'customer_facing' => true,
+				'fields'          => [
 					'subject' => [
 						'en' => '[{{site_name}}] Your booking is confirmed',
 						'nl' => '[{{site_name}}] Uw boeking is bevestigd',
@@ -52,8 +54,9 @@ class WPAPPT_Service_Email_Template_Store {
 				],
 			],
 			'booking_cancelled' => [
-				'label'  => 'Booking Cancelled',
-				'fields' => [
+				'label'           => 'Booking Cancelled',
+				'customer_facing' => true,
+				'fields'          => [
 					'subject' => [
 						'en' => '[{{site_name}}] Your booking has been cancelled',
 						'nl' => '[{{site_name}}] Uw boeking is geannuleerd',
@@ -69,8 +72,9 @@ class WPAPPT_Service_Email_Template_Store {
 				],
 			],
 			'reschedule_customer' => [
-				'label'  => 'Rescheduled (Customer)',
-				'fields' => [
+				'label'           => 'Rescheduled (Customer)',
+				'customer_facing' => true,
+				'fields'          => [
 					'subject' => [
 						'en' => '[{{site_name}}] Your booking has been rescheduled',
 						'nl' => '[{{site_name}}] Uw boeking is verzet',
@@ -86,8 +90,9 @@ class WPAPPT_Service_Email_Template_Store {
 				],
 			],
 			'reminder_customer' => [
-				'label'  => 'Appointment Reminder',
-				'fields' => [
+				'label'           => 'Appointment Reminder',
+				'customer_facing' => true,
+				'fields'          => [
 					'subject' => [
 						'en' => '[{{site_name}}] Reminder: your appointment on {{appointment_date}}',
 						'nl' => '[{{site_name}}] Herinnering: uw afspraak op {{appointment_date}}',
@@ -103,8 +108,9 @@ class WPAPPT_Service_Email_Template_Store {
 				],
 			],
 			'followup' => [
-				'label'  => 'Follow-up Message',
-				'fields' => [
+				'label'           => 'Follow-up Message',
+				'customer_facing' => true,
+				'fields'          => [
 					'subject' => [
 						'en' => 'A message from {{site_name}}',
 						'nl' => 'Een bericht van {{site_name}}',
@@ -171,5 +177,27 @@ class WPAPPT_Service_Email_Template_Store {
 			$result[ $field ] = $stored !== '' ? $stored : $defaults[ $lang ];
 		}
 		return $result;
+	}
+
+	/**
+	 * Return the server file path of the default attachment for a template+language.
+	 *
+	 * Returns '' if no attachment is configured, the WP attachment is invalid,
+	 * or the file does not exist on disk.
+	 */
+	public static function get_default_attachment_path( string $slug, string $lang ): string {
+		$id = (int) get_option( "wpappt_tpl_{$slug}_{$lang}_attachment_id", 0 );
+
+		if ( $id <= 0 ) {
+			return '';
+		}
+
+		$path = get_attached_file( $id );
+
+		if ( ! $path || ! file_exists( $path ) ) {
+			return '';
+		}
+
+		return $path;
 	}
 }

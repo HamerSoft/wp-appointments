@@ -122,4 +122,127 @@ class EmailTemplateStoreTest extends WpTestCase {
 		$texts = WPAPPT_Service_Email_Template_Store::get_texts( 'nonexistent_slug', 'en' );
 		$this->assertSame( [], $texts );
 	}
+
+	// =========================================================================
+	// customer_facing flag
+	// =========================================================================
+
+	/** @test */
+	public function customer_facing_templates_have_flag_set_to_true(): void {
+		$registry = WPAPPT_Service_Email_Template_Store::get_registry();
+		$customer_slugs = [
+			'booking_received_customer',
+			'booking_confirmed',
+			'booking_cancelled',
+			'reschedule_customer',
+			'reminder_customer',
+			'followup',
+		];
+		foreach ( $customer_slugs as $slug ) {
+			$this->assertTrue(
+				$registry[ $slug ]['customer_facing'] ?? false,
+				"Expected customer_facing = true for {$slug}"
+			);
+		}
+	}
+
+	/** @test */
+	public function admin_templates_do_not_have_customer_facing_flag(): void {
+		$registry = WPAPPT_Service_Email_Template_Store::get_registry();
+		$this->assertEmpty( $registry['booking_received_admin']['customer_facing'] ?? null );
+		$this->assertEmpty( $registry['reschedule_admin']['customer_facing'] ?? null );
+	}
+
+	// =========================================================================
+	// get_default_attachment_path
+	// =========================================================================
+
+	/** @test */
+	public function get_default_attachment_path_returns_empty_when_option_is_zero(): void {
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' ) {
+				return 0;
+			}
+			return $default ?? '';
+		} );
+
+		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
+			'booking_confirmed', 'en'
+		);
+
+		$this->assertSame( '', $path );
+	}
+
+	/** @test */
+	public function get_default_attachment_path_returns_empty_when_get_attached_file_returns_false(): void {
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' ) {
+				return 42;
+			}
+			return $default ?? '';
+		} );
+		Functions\when( 'get_attached_file' )->justReturn( false );
+
+		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
+			'booking_confirmed', 'en'
+		);
+
+		$this->assertSame( '', $path );
+	}
+
+	/** @test */
+	public function get_default_attachment_path_returns_empty_when_file_does_not_exist_on_disk(): void {
+		$missing = sys_get_temp_dir() . '/wpappt_nonexistent_' . uniqid() . '.pdf';
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' ) {
+				return 42;
+			}
+			return $default ?? '';
+		} );
+		Functions\when( 'get_attached_file' )->justReturn( $missing );
+
+		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
+			'booking_confirmed', 'en'
+		);
+
+		$this->assertSame( '', $path );
+	}
+
+	/** @test */
+	public function get_default_attachment_path_returns_file_path_when_attachment_is_valid(): void {
+		$tmp = tempnam( sys_get_temp_dir(), 'wpappt_' );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) use ( $tmp ) {
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' ) {
+				return 42;
+			}
+			return $default ?? '';
+		} );
+		Functions\when( 'get_attached_file' )->justReturn( $tmp );
+
+		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
+			'booking_confirmed', 'en'
+		);
+
+		unlink( $tmp );
+
+		$this->assertSame( $tmp, $path );
+	}
+
+	/** @test */
+	public function get_default_attachment_path_returns_empty_for_nl_when_only_en_is_set(): void {
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			// Only EN attachment is set; NL option returns 0.
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' ) return 42;
+			if ( $key === 'wpappt_tpl_booking_confirmed_nl_attachment_id' ) return 0;
+			return $default ?? '';
+		} );
+
+		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
+			'booking_confirmed', 'nl'
+		);
+
+		$this->assertSame( '', $path );
+	}
 }
