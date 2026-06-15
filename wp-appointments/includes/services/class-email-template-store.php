@@ -13,7 +13,7 @@ class WPAPPT_Service_Email_Template_Store {
 	 *
 	 * Each field value is an array keyed by language code ('en', 'nl') containing the default text.
 	 *
-	 * @return array<string, array{label: string, fields: array<string, array<string, string>>}> The map of template slug to config
+	 * @return array<string, array{label: string, customer_facing?: bool, fields: array<string, array<string, string>>}> The map of template slug to config
 	 */
 	public static function get_registry(): array {
 		return [
@@ -184,11 +184,20 @@ class WPAPPT_Service_Email_Template_Store {
 	 *
 	 * Returns '' if no attachment is configured, the WP attachment is invalid,
 	 * or the file does not exist on disk.
+	 *
+	 * @param string $slug Template slug from the registry.
+	 * @param string $lang Language code, must be 'en' or 'nl'.
+	 * @return string Absolute file path, or '' when the attachment is unavailable.
 	 */
 	public static function get_default_attachment_path( string $slug, string $lang ): string {
 		$id = (int) get_option( "wpappt_tpl_{$slug}_{$lang}_attachment_id", 0 );
 
 		if ( $id <= 0 ) {
+			return '';
+		}
+
+		$post = get_post( $id );
+		if ( ! $post || 'attachment' !== $post->post_type ) {
 			return '';
 		}
 

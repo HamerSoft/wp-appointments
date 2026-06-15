@@ -181,6 +181,7 @@ class EmailTemplateStoreTest extends WpTestCase {
 			}
 			return $default ?? '';
 		} );
+		Functions\when( 'get_post' )->justReturn( (object) [ 'post_type' => 'attachment' ] );
 		Functions\when( 'get_attached_file' )->justReturn( false );
 
 		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
@@ -200,6 +201,7 @@ class EmailTemplateStoreTest extends WpTestCase {
 			}
 			return $default ?? '';
 		} );
+		Functions\when( 'get_post' )->justReturn( (object) [ 'post_type' => 'attachment' ] );
 		Functions\when( 'get_attached_file' )->justReturn( $missing );
 
 		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
@@ -219,6 +221,7 @@ class EmailTemplateStoreTest extends WpTestCase {
 			}
 			return $default ?? '';
 		} );
+		Functions\when( 'get_post' )->justReturn( (object) [ 'post_type' => 'attachment' ] );
 		Functions\when( 'get_attached_file' )->justReturn( $tmp );
 
 		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
@@ -228,6 +231,23 @@ class EmailTemplateStoreTest extends WpTestCase {
 		unlink( $tmp );
 
 		$this->assertSame( $tmp, $path );
+	}
+
+	/** @test */
+	public function get_default_attachment_path_returns_empty_when_post_is_not_an_attachment(): void {
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' ) {
+				return 42;
+			}
+			return $default ?? '';
+		} );
+		Functions\when( 'get_post' )->justReturn( (object) [ 'post_type' => 'page' ] );
+
+		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
+			'booking_confirmed', 'en'
+		);
+
+		$this->assertSame( '', $path );
 	}
 
 	/** @test */
