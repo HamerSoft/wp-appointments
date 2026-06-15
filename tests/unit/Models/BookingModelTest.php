@@ -213,6 +213,36 @@ class BookingModelTest extends WpTestCase {
 	}
 
 	// =========================================================================
+	// delete
+	// =========================================================================
+
+	/** @test */
+	public function delete_returns_true_when_row_deleted(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'delete' )
+		   ->with( \Mockery::type( 'string' ), [ 'id' => 5 ], [ '%d' ] )
+		   ->andReturn( 1 );
+
+		$this->assertTrue( $this->makeModel( $db )->delete( 5 ) );
+	}
+
+	/** @test */
+	public function delete_returns_false_when_row_not_found(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'delete' )->andReturn( 0 );
+
+		$this->assertFalse( $this->makeModel( $db )->delete( 99 ) );
+	}
+
+	/** @test */
+	public function delete_returns_false_on_db_error(): void {
+		$db = $this->mockDb();
+		$db->shouldReceive( 'delete' )->andReturn( false );
+
+		$this->assertFalse( $this->makeModel( $db )->delete( 1 ) );
+	}
+
+	// =========================================================================
 	// find_all — SQL injection / whitelist
 	// =========================================================================
 

@@ -159,6 +159,16 @@ $can_cancel    = ( 'cancelled' !== $status );
 				</button>
 			</form>
 			<?php endif; ?>
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin-post.php' ) ); ?>"
+				  style="margin-top: 8px;"
+				  data-wpappt-confirm="<?php esc_attr_e( 'Permanently delete this booking? This cannot be undone.', 'wp-appointments' ); ?>">
+				<input type="hidden" name="action"     value="wpappt_delete_booking">
+				<input type="hidden" name="booking_id" value="<?php echo $booking_id; ?>">
+				<?php wp_nonce_field( "wpappt_delete_booking_{$booking_id}" ); ?>
+				<button type="submit" class="button button-secondary wpappt-btn-danger">
+					<?php esc_html_e( 'Delete Booking', 'wp-appointments' ); ?>
+				</button>
+			</form>
 		</div>
 
 		<!-- ---------------------------------------------------------------- -->

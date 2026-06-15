@@ -29,6 +29,7 @@ class WPAPPT_Controller_Admin_Ajax {
 		$actions = [
 			'wpappt_confirm_booking',
 			'wpappt_cancel_booking',
+			'wpappt_delete_booking',
 			'wpappt_save_booking_notes',
 			'wpappt_send_followup',
 			'wpappt_save_service',
@@ -86,6 +87,16 @@ class WPAPPT_Controller_Admin_Ajax {
 		do_action( 'wpappt_booking_status_changed', $id, 'cancelled', 'admin', $attachments );
 
 		$this->redirect( 'wpappt-bookings', 'booking_cancelled', [ 'action' => 'view', 'id' => $id ] );
+	}
+
+	public function handle_delete_booking(): void {
+		$id = (int) ( $_POST['booking_id'] ?? 0 );
+		check_admin_referer( "wpappt_delete_booking_{$id}" );
+		$this->require_capability();
+
+		$success = $this->booking_model->delete( $id );
+		$notice  = $success ? 'booking_deleted' : 'error_not_found';
+		$this->redirect( 'wpappt-bookings', $notice );
 	}
 
 	public function handle_save_booking_notes(): void {

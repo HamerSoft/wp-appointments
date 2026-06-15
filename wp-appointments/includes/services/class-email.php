@@ -101,7 +101,8 @@ class WPAPPT_Service_Email {
 			$data['booking']['customer_email'],
 			$data['subject'],
 			'booking-received-customer',
-			$data
+			$data,
+			$this->resolve_attachments( 'booking_received_customer', [] )
 		);
 	}
 
@@ -134,7 +135,7 @@ class WPAPPT_Service_Email {
 			$data['subject'],
 			'booking-confirmed',
 			$data,
-			$attachments
+			$this->resolve_attachments( 'booking_confirmed', $attachments )
 		);
 	}
 
@@ -149,7 +150,7 @@ class WPAPPT_Service_Email {
 			$data['subject'],
 			'booking-cancelled',
 			$data,
-			$attachments
+			$this->resolve_attachments( 'booking_cancelled', $attachments )
 		);
 	}
 
@@ -169,7 +170,8 @@ class WPAPPT_Service_Email {
 			$data['booking']['customer_email'],
 			$data['subject'],
 			'reschedule-customer',
-			$data
+			$data,
+			$this->resolve_attachments( 'reschedule_customer', [] )
 		);
 	}
 
@@ -199,7 +201,8 @@ class WPAPPT_Service_Email {
 			$data['booking']['customer_email'],
 			$data['subject'],
 			'reminder-customer',
-			$data
+			$data,
+			$this->resolve_attachments( 'reminder_customer', [] )
 		);
 	}
 
@@ -217,7 +220,7 @@ class WPAPPT_Service_Email {
 			$data['subject'],
 			'followup',
 			$data,
-			$attachments
+			$this->resolve_attachments( 'followup', $attachments )
 		);
 	}
 
@@ -335,6 +338,29 @@ class WPAPPT_Service_Email {
 	private function get_lang(): string {
 		$lang = (string) get_option( 'wpappt_email_language', 'en' );
 		return in_array( $lang, [ 'en', 'nl' ], true ) ? $lang : 'en';
+	}
+
+	/**
+	 * Apply the "manual replaces default" attachment rule.
+	 *
+	 * If $manual is non-empty, return it unchanged.
+	 * Otherwise, look up the default attachment path for $slug + current language
+	 * and return it in a one-element array, or [] if nothing is configured.
+	 *
+	 * @param  string[] $manual Server file paths supplied per-booking.
+	 * @return string[]
+	 */
+	private function resolve_attachments( string $slug, array $manual ): array {
+		if ( ! empty( $manual ) ) {
+			return $manual;
+		}
+
+		$path = WPAPPT_Service_Email_Template_Store::get_default_attachment_path(
+			$slug,
+			$this->get_lang()
+		);
+
+		return $path !== '' ? [ $path ] : [];
 	}
 
 	private function apply_template_texts( array &$data, string $slug ): void {

@@ -419,6 +419,19 @@ class WPAPPT_Model_Booking {
 	}
 
 	/**
+	 * Hard-delete a booking row by ID.
+	 */
+	public function delete( int $id ): bool {
+		$result = $this->db->delete(
+			$this->table,
+			[ 'id' => $id ],
+			[ '%d' ]
+		);
+
+		return false !== $result && $result > 0;
+	}
+
+	/**
 	 * Store a new reschedule token hash on a booking.
 	 *
 	 * The caller (WPAPPT_Service_Token) is responsible for computing the hash

@@ -65,6 +65,7 @@ class WPAPPT_Admin_Bookings_List_Table extends WP_List_Table {
 		return [
 			'confirm' => __( 'Confirm', 'wp-appointments' ),
 			'cancel'  => __( 'Cancel',  'wp-appointments' ),
+			'delete'  => __( 'Delete',  'wp-appointments' ),
 		];
 	}
 
@@ -75,7 +76,7 @@ class WPAPPT_Admin_Bookings_List_Table extends WP_List_Table {
 	public function process_bulk_action(): void {
 		$action = $this->current_action();
 
-		if ( ! $action || ! in_array( $action, [ 'confirm', 'cancel' ], true ) ) {
+		if ( ! $action || ! in_array( $action, [ 'confirm', 'cancel', 'delete' ], true ) ) {
 			return;
 		}
 
@@ -89,6 +90,20 @@ class WPAPPT_Admin_Bookings_List_Table extends WP_List_Table {
 
 		if ( empty( $ids ) ) {
 			return;
+		}
+
+		if ( 'delete' === $action ) {
+			foreach ( $ids as $id ) {
+				$this->booking_model->delete( $id );
+			}
+
+			wp_safe_redirect(
+				add_query_arg(
+					[ 'page' => 'wpappt-bookings', 'wpappt_notice' => 'booking_deleted' ],
+					admin_url( 'admin.php' )
+				)
+			);
+			exit;
 		}
 
 		$new_status = ( 'confirm' === $action ) ? 'confirmed' : 'cancelled';

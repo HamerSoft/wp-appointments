@@ -557,4 +557,150 @@ class EmailServiceTest extends WpTestCase {
 		// After substitution with site_name = 'Test Spa':
 		$this->assertSame( '[Test Spa] Your booking is confirmed', $capturedSubject );
 	}
+
+	// =========================================================================
+	// Default attachment fallback (resolve_attachments behaviour)
+	// =========================================================================
+
+	/** @test */
+	public function manual_attachment_is_used_and_default_is_not_fetched_when_manual_is_set(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_email_language' )  return 'en';
+			if ( $key === 'wpappt_sender_name' )     return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )     return 'admin@example.com';
+			return $default ?? '';
+		} );
+
+		// get_attached_file must never be called — manual replaces default.
+		Functions\expect( 'get_attached_file' )->never();
+
+		$capturedAttachments = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			}
+		);
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_booking_confirmed( 1, '', [ '/tmp/manual.pdf' ] );
+
+		$this->assertSame( [ '/tmp/manual.pdf' ], $capturedAttachments );
+	}
+
+	/** @test */
+	public function default_attachment_is_used_when_no_manual_attachment_is_provided(): void {
+		$tmp = tempnam( sys_get_temp_dir(), 'wpappt_default_' );
+
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) use ( $tmp ) {
+			if ( $key === 'wpappt_email_language' )                              return 'en';
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' )     return 99;
+			if ( $key === 'wpappt_sender_name' )                                 return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )                                 return 'admin@example.com';
+			return $default ?? '';
+		} );
+		Functions\when( 'get_post' )->alias( function ( int $id ) {
+			$post             = new \stdClass();
+			$post->post_type  = 'attachment';
+			return $post;
+		} );
+		Functions\when( 'get_attached_file' )->justReturn( $tmp );
+
+		$capturedAttachments = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			}
+		);
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_booking_confirmed( 1 );
+
+		unlink( $tmp );
+
+		$this->assertSame( [ $tmp ], $capturedAttachments );
+	}
+
+	/** @test */
+	public function no_attachment_is_used_when_neither_manual_nor_default_is_configured(): void {
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) {
+			if ( $key === 'wpappt_email_language' )                              return 'en';
+			if ( $key === 'wpappt_tpl_booking_confirmed_en_attachment_id' )     return 0;
+			if ( $key === 'wpappt_sender_name' )                                 return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )                                 return 'admin@example.com';
+			return $default ?? '';
+		} );
+
+		$capturedAttachments = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			}
+		);
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_booking_confirmed( 1 );
+
+		$this->assertSame( [], $capturedAttachments );
+	}
+
+	/** @test */
+	public function default_attachment_is_used_for_reminder_which_has_no_manual_attachment(): void {
+		$tmp = tempnam( sys_get_temp_dir(), 'wpappt_reminder_' );
+
+		$booking_model = \Mockery::mock( WPAPPT_Model_Booking::class );
+		$service_model = \Mockery::mock( WPAPPT_Model_Service::class );
+
+		$booking_model->shouldReceive( 'find' )->andReturn( $this->fakeBooking() );
+		$service_model->shouldReceive( 'find' )->andReturn( $this->fakeService() );
+
+		Functions\when( 'get_option' )->alias( function ( string $key, $default = null ) use ( $tmp ) {
+			if ( $key === 'wpappt_email_language' )                             return 'en';
+			if ( $key === 'wpappt_tpl_reminder_customer_en_attachment_id' )    return 55;
+			if ( $key === 'wpappt_sender_name' )                                return 'Test Spa';
+			if ( $key === 'wpappt_admin_email' )                                return 'admin@example.com';
+			return $default ?? '';
+		} );
+		Functions\when( 'get_post' )->alias( function ( int $id ) {
+			$post             = new \stdClass();
+			$post->post_type  = 'attachment';
+			return $post;
+		} );
+		Functions\when( 'get_attached_file' )->justReturn( $tmp );
+
+		$capturedAttachments = null;
+		Functions\when( 'wp_mail' )->alias(
+			function ( $to, $subject, $body, $headers, $attachments = [] ) use ( &$capturedAttachments ): bool {
+				$capturedAttachments = $attachments;
+				return true;
+			}
+		);
+
+		$this->makeService( $booking_model, $service_model )
+		     ->send_reminder_customer( 1 );
+
+		unlink( $tmp );
+
+		$this->assertSame( [ $tmp ], $capturedAttachments );
+	}
 }
