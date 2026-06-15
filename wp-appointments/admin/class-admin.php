@@ -150,6 +150,17 @@ class WPAPPT_Admin {
 				true
 			);
 		}
+
+		if ( 'appointments_page_wpappt-email-templates' === $hook ) {
+			wp_enqueue_media();
+			wp_enqueue_script(
+				'wpappt-booking-attachments',
+				WPAPPT_PLUGIN_URL . 'assets/js/admin-booking-attachments.js',
+				[],
+				WPAPPT_VERSION,
+				true
+			);
+		}
 	}
 
 	// -------------------------------------------------------------------------
@@ -170,6 +181,7 @@ class WPAPPT_Admin {
 		$messages = [
 			'booking_confirmed'      => [ 'success', __( 'Booking confirmed.',                  'wp-appointments' ) ],
 			'booking_cancelled'      => [ 'success', __( 'Booking cancelled.',                  'wp-appointments' ) ],
+			'booking_deleted'        => [ 'success', __( 'Booking deleted.',                    'wp-appointments' ) ],
 			'booking_notes_saved'    => [ 'success', __( 'Notes saved.',                        'wp-appointments' ) ],
 			'followup_sent'          => [ 'success', __( 'Follow-up email sent.',               'wp-appointments' ) ],
 			'service_saved'          => [ 'success', __( 'Service saved.',                      'wp-appointments' ) ],
