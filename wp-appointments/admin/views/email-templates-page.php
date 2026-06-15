@@ -85,7 +85,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 							$att_filename = ( $att_path && file_exists( $att_path ) ) ? wp_basename( $att_path ) : '';
 						?>
 						<p class="wpappt-attachment-picker">
-							<label><strong><?php esc_html_e( 'Default attachment', 'wp-appointments' ); ?></strong></label><br>
+							<strong><?php esc_html_e( 'Default attachment', 'wp-appointments' ); ?></strong><br>
 							<button type="button" class="button wpappt-attach-btn">
 								<?php esc_html_e( 'Attach file', 'wp-appointments' ); ?>
 							</button>
