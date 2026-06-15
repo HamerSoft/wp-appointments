@@ -57,6 +57,9 @@ class WPAPPT_Admin_Email_Templates_Page {
 			if ( empty( $config['customer_facing'] ) ) {
 				continue;
 			}
+			if ( ! isset( $input[ $slug ] ) ) {
+				continue;
+			}
 			foreach ( $langs as $lang ) {
 				$id = absint( $input[ $slug ][ $lang ]['attachment_id'] ?? 0 );
 				update_option( "wpappt_tpl_{$slug}_{$lang}_attachment_id", $id );
